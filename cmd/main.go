@@ -3,7 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"frappuccino/internal/server"
 	"log"
+	"log/slog"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -27,6 +30,9 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	server := server.NewServer(":8080", db, slog.New(slog.NewTextHandler(os.Stdout, nil)))
+	server.RunServer()
 }
 
 func connectDB(connectionString string) (*sql.DB, error) {
