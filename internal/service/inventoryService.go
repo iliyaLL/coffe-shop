@@ -33,9 +33,13 @@ func (s *inventoryService) Insert(inventory *models.Inventory) (map[string]strin
 
 	return nil, err
 }
+
 func (s *inventoryService) RetrieveByID(id int32) (models.Inventory, error) {
 	return models.Inventory{}, nil
 }
+
 func (s *inventoryService) RetrieveAll() (*[]models.Inventory, error) {
-	return nil, nil
+	inventory, err := s.inventoryRepo.RetrieveAll()
+
+	return inventory, err
 }

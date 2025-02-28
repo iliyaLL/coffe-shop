@@ -37,3 +37,15 @@ func (app *application) inventoryCreatePost(w http.ResponseWriter, r *http.Reque
 
 	utils.SendJSONResponse(w, http.StatusCreated, map[string]string{"message": "created"})
 }
+
+func (app *application) inventoryRetreiveAllGet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	inventory, err := app.InventorySvc.RetrieveAll()
+	if err != nil {
+		utils.SendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Internal Server Error"})
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusOK, inventory)
+}

@@ -49,7 +49,7 @@ func (model *InventoryRepositoryPostgres) Insert(name, unit string, quantity int
 }
 
 func (model *InventoryRepositoryPostgres) RetrieveByID(id uint32) (models.Inventory, error) {
-	stmt, err := model.pq.Prepare("SELECT * FROM inventory WHERE id = ?")
+	stmt, err := model.pq.Prepare("SELECT * FROM inventory WHERE id = $1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func (model *InventoryRepositoryPostgres) RetrieveByID(id uint32) (models.Invent
 		&inventory.Name,
 		&inventory.Quantity,
 		&inventory.Unit,
-		&inventory.Categories,
+		pq.Array(&inventory.Categories),
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -94,7 +94,7 @@ func (model *InventoryRepositoryPostgres) RetrieveAll() (*[]models.Inventory, er
 			&inventory.Name,
 			&inventory.Quantity,
 			&inventory.Unit,
-			&inventory.Categories,
+			pq.Array(&inventory.Categories),
 		)
 		if err != nil {
 			return nil, err
