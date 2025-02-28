@@ -38,7 +38,7 @@ func (s *inventoryService) Insert(inventory *models.Inventory) (map[string]strin
 func (s *inventoryService) RetrieveByID(id string) (models.Inventory, error) {
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		return models.Inventory{}, models.ErrInvalidId
+		return models.Inventory{}, models.ErrInvalidID
 	}
 
 	inventory, err := s.inventoryRepo.RetrieveByID(idInt)
