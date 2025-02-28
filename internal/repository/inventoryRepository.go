@@ -11,7 +11,7 @@ import (
 
 type InventoryRepository interface {
 	Insert(name, unit string, quantity int, categories []string) error
-	RetrieveByID(id uint32) (models.Inventory, error)
+	RetrieveByID(id int) (models.Inventory, error)
 	RetrieveAll() (*[]models.Inventory, error)
 }
 
@@ -48,11 +48,12 @@ func (model *InventoryRepositoryPostgres) Insert(name, unit string, quantity int
 	return nil
 }
 
-func (model *InventoryRepositoryPostgres) RetrieveByID(id uint32) (models.Inventory, error) {
+func (model *InventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory, error) {
 	stmt, err := model.pq.Prepare("SELECT * FROM inventory WHERE id = $1")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer stmt.Close()
 
 	var inventory models.Inventory
 	err = stmt.QueryRow(id).Scan(

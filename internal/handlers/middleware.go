@@ -8,6 +8,7 @@ import (
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
 
+// ChainMiddleware builds the chain of middlewares
 func ChainMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
 	if len(m) < 1 {
 		return h
@@ -21,6 +22,7 @@ func ChainMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
 	return wrapped
 }
 
+// logs every incoming request
 func logRequest(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (

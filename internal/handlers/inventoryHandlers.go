@@ -49,3 +49,22 @@ func (app *application) inventoryRetreiveAllGet(w http.ResponseWriter, r *http.R
 
 	utils.SendJSONResponse(w, http.StatusOK, inventory)
 }
+
+func (app *application) inventoryRetrieveByIDGet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	id := r.PathValue("id")
+	inventory, err := app.InventorySvc.RetrieveByID(id)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidID) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "id is not a valid int"})
+		} else if errors.Is(err, models.ErrNoRecord) {
+			utils.SendJSONResponse(w, http.StatusNotFound, map[string]string{"error": "Not Found"})
+		} else {
+			utils.SendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Internal Server error"})
+		}
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusOK, inventory)
+}

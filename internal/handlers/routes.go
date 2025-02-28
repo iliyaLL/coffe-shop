@@ -25,8 +25,9 @@ func (app *application) Routes() http.Handler {
 	}
 
 	endpoints := map[string]http.HandlerFunc{
-		"POST /inventory": app.inventoryCreatePost,
-		"GET /inventory":  app.inventoryRetreiveAllGet,
+		"POST /inventory":     app.inventoryCreatePost,
+		"GET /inventory":      app.inventoryRetreiveAllGet,
+		"GET /inventory/{id}": app.inventoryRetrieveByIDGet,
 	}
 	for endpoint, f := range endpoints {
 		router.HandleFunc(endpoint, ChainMiddleware(f, commonMiddleware...))
