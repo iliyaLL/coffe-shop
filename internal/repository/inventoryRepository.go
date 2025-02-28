@@ -10,7 +10,7 @@ import (
 )
 
 type InventoryRepository interface {
-	Insert(name, unit string, quantity int, categories *[]string) error
+	Insert(name, unit string, quantity int, categories []string) error
 	RetrieveByID(id uint32) (models.Inventory, error)
 	RetrieveAll() (*[]models.Inventory, error)
 }
@@ -23,14 +23,14 @@ func NewInventoryRepositoryWithPostgres(db *sql.DB) *InventoryRepositoryPostgres
 	return &InventoryRepositoryPostgres{pq: db}
 }
 
-func (model *InventoryRepositoryPostgres) Insert(name, unit string, quantity int, categories *[]string) error {
-	stmt, err := model.pq.Prepare("INSERT INTO inventory (name, quantity, unit, categories) VALUES (?, ?, ?, ?)")
+func (model *InventoryRepositoryPostgres) Insert(name, unit string, quantity int, categories []string) error {
+	stmt, err := model.pq.Prepare("INSERT INTO inventory (name, quantity, unit, categories) VALUES ($1, $2, $3, $4)")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(name, quantity, unit, categories)
+	_, err = stmt.Exec(name, quantity, unit, pq.Array(categories))
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
@@ -38,6 +38,8 @@ func (model *InventoryRepositoryPostgres) Insert(name, unit string, quantity int
 				return models.ErrDuplicateInventory
 			case "23514":
 				return models.ErrNegativeQuantity
+			case "22P02":
+				return models.ErrInvalidEnumType
 			}
 		}
 		return err

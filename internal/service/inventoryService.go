@@ -7,7 +7,7 @@ import (
 )
 
 type InventoryService interface {
-	Insert(name, unit string, quantity int, categories *[]string) error
+	Insert(inventory *models.Inventory) (map[string]string, error)
 	RetrieveByID(id int32) (models.Inventory, error)
 	RetrieveAll() (*[]models.Inventory, error)
 }
@@ -22,8 +22,16 @@ func NewInventoryService(db *sql.DB) *inventoryService {
 	return svc
 }
 
-func (s *inventoryService) Insert(name, unit string, quantity int, categories *[]string) error {
-	return nil
+func (s *inventoryService) Insert(inventory *models.Inventory) (map[string]string, error) {
+	validator := models.NewInventoryValidator(inventory)
+	m := validator.Validate()
+	if len(m) > 0 {
+		return m, models.ErrMissingFields
+	}
+
+	err := s.inventoryRepo.Insert(inventory.Name, inventory.Unit, inventory.Quantity, inventory.Categories)
+
+	return nil, err
 }
 func (s *inventoryService) RetrieveByID(id int32) (models.Inventory, error) {
 	return models.Inventory{}, nil

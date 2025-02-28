@@ -1,18 +1,11 @@
 package models
 
 type Inventory struct {
-	ID         uint32   `json:"id"`
+	ID         int      `json:"id"`
 	Name       string   `json:"name"`
 	Quantity   int      `json:"quantity"`
 	Unit       string   `json:"unit"`
 	Categories []string `json:"categories"`
-}
-
-func NewInventoryValidator(inventory *Inventory) inventoryValidator {
-	return inventoryValidator{
-		make(map[string]string),
-		inventory,
-	}
 }
 
 type inventoryValidator struct {
@@ -20,7 +13,14 @@ type inventoryValidator struct {
 	inventory *Inventory
 }
 
-func (v *inventoryValidator) Validate() (map[string]string, bool) {
+func NewInventoryValidator(inventory *Inventory) *inventoryValidator {
+	return &inventoryValidator{
+		make(map[string]string),
+		inventory,
+	}
+}
+
+func (v *inventoryValidator) Validate() map[string]string {
 	if v.inventory.Name == "" {
 		v.validator["Name"] = "missing Name"
 	}
@@ -29,8 +29,8 @@ func (v *inventoryValidator) Validate() (map[string]string, bool) {
 	}
 
 	if len(v.validator) > 0 {
-		return v.validator, false
+		return v.validator
 	} else {
-		return nil, true
+		return nil
 	}
 }
