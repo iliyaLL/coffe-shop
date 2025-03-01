@@ -28,6 +28,7 @@ func (app *application) Routes() http.Handler {
 		"POST /inventory":     app.inventoryCreatePost,
 		"GET /inventory":      app.inventoryRetreiveAllGet,
 		"GET /inventory/{id}": app.inventoryRetrieveByIDGet,
+		"PUT /inventory/{id}": app.inventoryUpdateByIDPut,
 	}
 	for endpoint, f := range endpoints {
 		router.HandleFunc(endpoint, ChainMiddleware(f, commonMiddleware...))
