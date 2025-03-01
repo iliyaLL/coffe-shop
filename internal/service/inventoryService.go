@@ -12,6 +12,7 @@ type InventoryService interface {
 	RetrieveByID(id string) (models.Inventory, error)
 	RetrieveAll() (*[]models.Inventory, error)
 	Update(inventory *models.Inventory, id string) (map[string]string, error)
+	Delete(id string) error
 }
 
 type inventoryService struct {
@@ -67,4 +68,14 @@ func (s *inventoryService) Update(inventory *models.Inventory, id string) (map[s
 
 	err = s.inventoryRepo.Update(idInt, inventory.Name, inventory.Unit, inventory.Quantity, inventory.Categories)
 	return nil, err
+}
+
+func (s *inventoryService) Delete(id string) error {
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return models.ErrInvalidID
+	}
+
+	err = s.inventoryRepo.Delete(idInt)
+	return err
 }

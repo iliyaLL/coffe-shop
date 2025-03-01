@@ -135,6 +135,8 @@ func (model *inventoryRepositoryPostgres) Update(id int, name, unit string, quan
 				return models.ErrInvalidEnumType
 			}
 		}
+
+		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -152,8 +154,13 @@ func (model *inventoryRepositoryPostgres) Delete(id int) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(id)
-	if errors.Is(err, sql.ErrNoRows) {
+	result, err := stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNoRecord
 	}
 
