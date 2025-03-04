@@ -10,8 +10,6 @@ import (
 )
 
 func (app *application) inventoryCreatePost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var inventory models.Inventory
 	err := json.NewDecoder(r.Body).Decode(&inventory)
 	if err != nil {
@@ -40,8 +38,6 @@ func (app *application) inventoryCreatePost(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) inventoryRetreiveAllGet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	inventory, err := app.InventorySvc.RetrieveAll()
 	if err != nil {
 		utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"})
@@ -52,8 +48,6 @@ func (app *application) inventoryRetreiveAllGet(w http.ResponseWriter, r *http.R
 }
 
 func (app *application) inventoryRetrieveByIDGet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	id := r.PathValue("id")
 	inventory, err := app.InventorySvc.RetrieveByID(id)
 	if err != nil {
@@ -71,8 +65,6 @@ func (app *application) inventoryRetrieveByIDGet(w http.ResponseWriter, r *http.
 }
 
 func (app *application) inventoryUpdateByIDPut(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	id := r.PathValue("id")
 	var inventory models.Inventory
 	err := json.NewDecoder(r.Body).Decode(&inventory)
@@ -106,8 +98,6 @@ func (app *application) inventoryUpdateByIDPut(w http.ResponseWriter, r *http.Re
 }
 
 func (app *application) inventoryDeleteByIDDelete(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	id := r.PathValue("id")
 	err := app.InventorySvc.Delete(id)
 	if err != nil {

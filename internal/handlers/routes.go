@@ -22,6 +22,7 @@ func (app *application) Routes() http.Handler {
 	commonMiddleware := []Middleware{
 		recoverPanic,
 		logRequest,
+		contentTypeJSON,
 	}
 
 	endpoints := map[string]http.HandlerFunc{
