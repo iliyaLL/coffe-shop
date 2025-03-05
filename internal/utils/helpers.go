@@ -10,7 +10,7 @@ import (
 //	{
 //		"error": "Internal Server Error"
 //	}
-type Response map[string]string
+type Response map[string]interface{}
 
 func SendJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.WriteHeader(statusCode)

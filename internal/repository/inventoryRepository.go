@@ -25,8 +25,8 @@ func NewInventoryRepositoryWithPostgres(db *sql.DB) *inventoryRepositoryPostgres
 	return &inventoryRepositoryPostgres{pq: db}
 }
 
-func (model *inventoryRepositoryPostgres) Insert(name, unit string, quantity int, categories []string) error {
-	stmt, err := model.pq.Prepare("INSERT INTO inventory (name, quantity, unit, categories) VALUES ($1, $2, $3, $4)")
+func (m *inventoryRepositoryPostgres) Insert(name, unit string, quantity int, categories []string) error {
+	stmt, err := m.pq.Prepare("INSERT INTO inventory (name, quantity, unit, categories) VALUES ($1, $2, $3, $4)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,8 +50,8 @@ func (model *inventoryRepositoryPostgres) Insert(name, unit string, quantity int
 	return nil
 }
 
-func (model *inventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory, error) {
-	stmt, err := model.pq.Prepare("SELECT * FROM inventory WHERE id = $1")
+func (m *inventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory, error) {
+	stmt, err := m.pq.Prepare("SELECT * FROM inventory WHERE id = $1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,8 +75,8 @@ func (model *inventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory
 	return inventory, nil
 }
 
-func (model *inventoryRepositoryPostgres) RetrieveAll() (*[]models.Inventory, error) {
-	stmt, err := model.pq.Prepare("SELECT * FROM inventory")
+func (m *inventoryRepositoryPostgres) RetrieveAll() (*[]models.Inventory, error) {
+	stmt, err := m.pq.Prepare("SELECT * FROM inventory")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -113,8 +113,8 @@ func (model *inventoryRepositoryPostgres) RetrieveAll() (*[]models.Inventory, er
 	return &InventoryAll, err
 }
 
-func (model *inventoryRepositoryPostgres) Update(id int, name, unit string, quantity int, categories []string) error {
-	stmt, err := model.pq.Prepare("UPDATE inventory SET name=$1, unit=$2, quantity=$3, categories=$4 WHERE id=$5")
+func (m *inventoryRepositoryPostgres) Update(id int, name, unit string, quantity int, categories []string) error {
+	stmt, err := m.pq.Prepare("UPDATE inventory SET name=$1, unit=$2, quantity=$3, categories=$4 WHERE id=$5")
 	if err != nil {
 		log.Fatal()
 	}
@@ -147,8 +147,8 @@ func (model *inventoryRepositoryPostgres) Update(id int, name, unit string, quan
 	return err
 }
 
-func (model *inventoryRepositoryPostgres) Delete(id int) error {
-	stmt, err := model.pq.Prepare("DELETE FROM inventory WHERE id=$1")
+func (m *inventoryRepositoryPostgres) Delete(id int) error {
+	stmt, err := m.pq.Prepare("DELETE FROM inventory WHERE id=$1")
 	if err != nil {
 		log.Fatal(err)
 	}
