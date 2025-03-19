@@ -37,9 +37,11 @@ func (app *application) Routes() http.Handler {
 		"PUT /inventory/{id}":    app.inventoryUpdateByIDPut,
 		"DELETE /inventory/{id}": app.inventoryDeleteByIDDelete,
 
-		"POST /menu":     app.menuCreatePost,
-		"GET /menu":      app.menuRetrieveAllGet,
-		"GET /menu/{id}": app.menuRetrieveAllByIDGet,
+		"POST /menu":        app.menuCreatePost,
+		"GET /menu":         app.menuRetrieveAllGet,
+		"GET /menu/{id}":    app.menuRetrieveAllByIDGet,
+		"PUT /menu/{id}":    app.menuUpdate,
+		"DELETE /menu/{id}": app.menuDelete,
 	}
 	for endpoint, f := range endpoints {
 		router.HandleFunc(endpoint, ChainMiddleware(f, commonMiddleware...))

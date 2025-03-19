@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"frappuccino/internal/models"
 	"frappuccino/internal/utils"
 	"net/http"
@@ -60,4 +61,54 @@ func (app *application) menuRetrieveAllByIDGet(w http.ResponseWriter, r *http.Re
 	}
 
 	utils.SendJSONResponse(w, http.StatusOK, menuItem)
+}
+
+func (app *application) menuUpdate(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	var menuItem models.MenuItem
+	err := json.NewDecoder(r.Body).Decode(&menuItem)
+	if err != nil {
+		utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "request body does not match json format"})
+		return
+	}
+	defer r.Body.Close()
+
+	m, err := app.MenuSvc.Update(id, menuItem)
+	if err != nil {
+		if errors.Is(err, models.ErrMissingFields) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, m)
+		} else if errors.Is(err, models.ErrInvalidID) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
+		} else if errors.Is(err, models.ErrDuplicateMenuItem) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
+		} else if errors.Is(err, models.ErrNegativePrice) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
+		} else if errors.Is(err, models.ErrForeignKeyConstraintMenuInventory) {
+			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
+		} else if errors.Is(err, models.ErrNoRecord) {
+			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
+		} else {
+			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "internal server error"})
+		}
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": "OK"})
+}
+
+func (app *application) menuDelete(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	err := app.MenuSvc.Delete(id)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidID) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
+		} else if errors.Is(err, models.ErrNoRecord) {
+			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
+		} else {
+			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"})
+		}
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": fmt.Sprintf("Deleted %s", id)})
 }

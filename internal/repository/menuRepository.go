@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"frappuccino/internal/models"
 	"log/slog"
 
@@ -13,8 +14,9 @@ type MenuRepository interface {
 	InsertMenuInventory(tx *sql.Tx, menuID int, inventory []models.MenuItemInventory) error
 	RetrieveAll() ([]models.MenuItem, error)
 	RetrieveByID(id int) (models.MenuItem, error)
-	Update()
-	Delete()
+	UpdateMenuItem(tx *sql.Tx, id int, menuItem models.MenuItem) error
+	DeleteMenuInventory(tx *sql.Tx, id int) error
+	Delete(id int) error
 	BeginTransaction() (*sql.Tx, error)
 }
 
@@ -188,10 +190,59 @@ func (m *menuRepositoryPostgres) RetrieveByID(id int) (models.MenuItem, error) {
 	return menuItem, nil
 }
 
-func (m *menuRepositoryPostgres) Update() {
+func (m *menuRepositoryPostgres) UpdateMenuItem(tx *sql.Tx, id int, menuItem models.MenuItem) error {
+	stmt := `
+		UPDATE menu_items
+		SET name = $1, description = $2, price = $3
+		WHERE id = $4
+	`
+	result, err := tx.Exec(stmt, menuItem.Name, menuItem.Description, menuItem.Price, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.ErrNoRecord
+		}
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code {
+			case "23505":
+				return models.ErrDuplicateMenuItem
+			case "23514":
+				return models.ErrNegativePrice
+			}
+		}
+		return err
+	}
 
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 {
+		return models.ErrNoRecord
+	}
+
+	return err
 }
 
-func (m *menuRepositoryPostgres) Delete() {
+func (m *menuRepositoryPostgres) DeleteMenuInventory(tx *sql.Tx, id int) error {
+	stmt := "DELETE FROM menu_item_inventory WHERE menu_id = $1"
+	_, err := tx.Exec(stmt, id)
+	if err != nil {
+		m.logger.Error("Failed to execute query", "error", err)
+		return err
+	}
 
+	return nil
+}
+
+func (m *menuRepositoryPostgres) Delete(id int) error {
+	stmt := "DELETE FROM menu_items WHERE id = $1"
+	result, err := m.pq.Exec(stmt, id)
+	if err != nil {
+		m.logger.Error("Failed to execute query", "error", err)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 {
+		return models.ErrNoRecord
+	}
+
+	return err
 }
