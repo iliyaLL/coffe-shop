@@ -11,8 +11,8 @@ import (
 type MenuRepository interface {
 	InsertMenuItem(tx *sql.Tx, item models.MenuItem) (int, error)
 	InsertMenuInventory(tx *sql.Tx, menuID int, inventory []models.MenuItemInventory) error
-	RetrieveAll()
-	RetrieveByID()
+	RetrieveAll() ([]models.MenuItem, error)
+	RetrieveByID(id int) (models.MenuItem, error)
 	Update()
 	Delete()
 	BeginTransaction() (*sql.Tx, error)
@@ -87,12 +87,105 @@ func (m *menuRepositoryPostgres) InsertMenuInventory(tx *sql.Tx, menuID int, inv
 	return nil
 }
 
-func (m *menuRepositoryPostgres) RetrieveAll() {
+func (m *menuRepositoryPostgres) RetrieveAll() ([]models.MenuItem, error) {
+	rows, err := m.pq.Query(`
+		SELECT menu.id, menu.name, menu.description, menu.price, inventory.inventory_id, inventory.quantity
+		FROM menu_items AS menu
+		LEFT JOIN menu_item_inventory AS inventory
+		ON menu.id=inventory.menu_id
+	`)
+	if err != nil {
+		m.logger.Error("Failed to execute Query", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
 
+	menuMap := make(map[int]*models.MenuItem)
+	for rows.Next() {
+		var id int
+		var name, description string
+		var price float64
+		var inventoryID, quantity sql.NullInt32
+
+		err := rows.Scan(&id, &name, &description, &price, &inventoryID, &quantity)
+		if err != nil {
+			m.logger.Error("Failed to scan row", "error", err)
+			return nil, err
+		}
+
+		if _, ok := menuMap[id]; !ok {
+			menuMap[id] = &models.MenuItem{
+				ID:          id,
+				Name:        name,
+				Description: description,
+				Price:       price,
+				Inventory:   []models.MenuItemInventory{},
+			}
+		}
+
+		if inventoryID.Valid {
+			menuMap[id].Inventory = append(menuMap[id].Inventory, models.MenuItemInventory{
+				InventoryID: int(inventoryID.Int32),
+				Quantity:    int(quantity.Int32),
+			})
+		}
+	}
+
+	var menuItems []models.MenuItem
+	for _, menu := range menuMap {
+		menuItems = append(menuItems, *menu)
+	}
+
+	return menuItems, nil
 }
 
-func (m *menuRepositoryPostgres) RetrieveByID() {
+func (m *menuRepositoryPostgres) RetrieveByID(id int) (models.MenuItem, error) {
+	stmt := `
+		SELECT menu.id, menu.name, menu.description, menu.price, 
+		       inventory.inventory_id, inventory.quantity
+		FROM menu_items AS menu
+		LEFT JOIN menu_item_inventory AS inventory
+		ON menu.id = inventory.menu_id
+		WHERE menu.id = $1
+	`
+	rows, err := m.pq.Query(stmt, id)
+	if err != nil {
+		m.logger.Error("Failed to execute query", "error", err)
+		return models.MenuItem{}, err
+	}
+	defer rows.Close()
 
+	var menuItem models.MenuItem
+
+	for rows.Next() {
+		var inventoryID, quantity sql.NullInt32
+
+		err = rows.Scan(
+			&menuItem.ID,
+			&menuItem.Name,
+			&menuItem.Description,
+			&menuItem.Price,
+			&inventoryID,
+			&quantity,
+		)
+		if err != nil {
+			m.logger.Error("Failed to scan row", "error", err)
+			return models.MenuItem{}, err
+		}
+
+		if inventoryID.Valid {
+			menuItem.Inventory = append(menuItem.Inventory, models.MenuItemInventory{
+				InventoryID: int(inventoryID.Int32),
+				Quantity:    int(quantity.Int32),
+			})
+		}
+	}
+
+	if menuItem.ID == 0 {
+		return models.MenuItem{}, models.ErrNoRecord
+	}
+
+	return menuItem, nil
 }
 
 func (m *menuRepositoryPostgres) Update() {

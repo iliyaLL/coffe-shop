@@ -7,7 +7,7 @@ var (
 	ErrNegativeQuantity = errors.New("models: positive quantity constraint violation")
 	ErrNegativePrice    = errors.New("models: positive price constraint violation")
 	ErrMissingFields    = errors.New("models: missing fields")
-	ErrInvalidID        = errors.New("models: id is not valid int")
+	ErrInvalidID        = errors.New("id is not valid int")
 
 	//Inventory errors
 	ErrDuplicateInventory       = errors.New("models: duplicate inventory")

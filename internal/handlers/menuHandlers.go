@@ -34,3 +34,30 @@ func (app *application) menuCreatePost(w http.ResponseWriter, r *http.Request) {
 
 	utils.SendJSONResponse(w, http.StatusCreated, utils.Response{"message": "created"})
 }
+
+func (app *application) menuRetrieveAllGet(w http.ResponseWriter, r *http.Request) {
+	menuItems, err := app.MenuSvc.RetrieveAll()
+	if err != nil {
+		utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"})
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusOK, menuItems)
+}
+
+func (app *application) menuRetrieveAllByIDGet(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	menuItem, err := app.MenuSvc.RetrieveByID(id)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidID) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
+		} else if errors.Is(err, models.ErrNoRecord) {
+			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
+		} else {
+			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server error"})
+		}
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusOK, menuItem)
+}

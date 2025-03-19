@@ -5,12 +5,13 @@ import (
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
 	"log/slog"
+	"strconv"
 )
 
 type MenuService interface {
 	InsertMenu(menu models.MenuItem) (map[string]string, error)
-	RetrieveAll()
-	RetrieveByID()
+	RetrieveAll() ([]models.MenuItem, error)
+	RetrieveByID(id string) (models.MenuItem, error)
 	Update()
 	Delete()
 }
@@ -51,7 +52,21 @@ func (s *menuService) InsertMenu(menu models.MenuItem) (map[string]string, error
 	return nil, tx.Commit()
 }
 
-func (s *menuService) RetrieveAll()  {}
-func (s *menuService) RetrieveByID() {}
-func (s *menuService) Update()       {}
-func (s *menuService) Delete()       {}
+func (s *menuService) RetrieveAll() ([]models.MenuItem, error) {
+	menuItems, err := s.menuRepo.RetrieveAll()
+
+	return menuItems, err
+}
+
+func (s *menuService) RetrieveByID(id string) (models.MenuItem, error) {
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return models.MenuItem{}, models.ErrInvalidID
+	}
+
+	menuItem, err := s.menuRepo.RetrieveByID(idInt)
+
+	return menuItem, err
+}
+func (s *menuService) Update() {}
+func (s *menuService) Delete() {}

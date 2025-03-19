@@ -82,15 +82,9 @@ func (m *inventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory, er
 }
 
 func (m *inventoryRepositoryPostgres) RetrieveAll() ([]models.Inventory, error) {
-	stmt, err := m.pq.Prepare("SELECT * FROM inventory")
+	rows, err := m.pq.Query("SELECT * FROM inventory")
 	if err != nil {
-		m.logger.Error("Failed to prepare statement", "error", err)
-		return []models.Inventory{}, err
-	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query()
-	if err != nil {
+		m.logger.Error("Failed to execute Query", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
