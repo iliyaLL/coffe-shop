@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"frappuccino/internal/server"
+	"frappuccino/internal/utils"
 	"log"
-	"log/slog"
-	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -31,7 +30,7 @@ func main() {
 	}
 	defer db.Close()
 
-	server := server.NewServer(":8080", db, slog.New(slog.NewTextHandler(os.Stdout, nil)))
+	server := server.NewServer(":8080", db, utils.GetLogger())
 	server.RunServer()
 }
 

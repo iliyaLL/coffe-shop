@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"frappuccino/internal/utils"
 	"net/http"
 )
 
@@ -23,7 +22,7 @@ func ChainMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
 }
 
 // logs every incoming request
-func logRequest(next http.HandlerFunc) http.HandlerFunc {
+func (app *application) logRequest(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			ip     = r.RemoteAddr
@@ -32,14 +31,13 @@ func logRequest(next http.HandlerFunc) http.HandlerFunc {
 			uri    = r.URL.RequestURI()
 		)
 
-		logger := utils.GetLogger()
-		logger.Info("received request", "ip", ip, "proto", proto, "method", method, "uri", uri)
+		app.logger.Info("received request", "ip", ip, "proto", proto, "method", method, "uri", uri)
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-func recoverPanic(next http.HandlerFunc) http.HandlerFunc {
+func (app *application) recoverPanic(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -48,8 +46,7 @@ func recoverPanic(next http.HandlerFunc) http.HandlerFunc {
 					method = r.Method
 					uri    = r.URL.RequestURI()
 				)
-				logger := utils.GetLogger()
-				logger.Error(fmt.Errorf("%s", err).Error(), "method", method, "uri", uri)
+				app.logger.Error(fmt.Errorf("%s", err).Error(), "method", method, "uri", uri)
 
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}

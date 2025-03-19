@@ -18,16 +18,16 @@ func (app *application) inventoryCreatePost(w http.ResponseWriter, r *http.Reque
 	}
 	defer r.Body.Close()
 
-	m, err := app.InventorySvc.Insert(&inventory)
+	m, err := app.InventorySvc.Insert(inventory)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateInventory) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "duplicate inventory"})
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else if errors.Is(err, models.ErrNegativeQuantity) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "negative quantity"})
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else if errors.Is(err, models.ErrMissingFields) {
 			utils.SendJSONResponse(w, http.StatusBadRequest, m)
-		} else if errors.Is(err, models.ErrInvalidEnumType) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "invalid unit type", "supported types": "shots, ml, g, units"})
+		} else if errors.Is(err, models.ErrInvalidEnumTypeInventory) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else {
 			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "internal server error"})
 		}
@@ -52,9 +52,9 @@ func (app *application) inventoryRetrieveByIDGet(w http.ResponseWriter, r *http.
 	inventory, err := app.InventorySvc.RetrieveByID(id)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "id is not a valid int"})
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": "Not Found"})
+			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
 		} else {
 			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server error"})
 		}
@@ -74,20 +74,20 @@ func (app *application) inventoryUpdateByIDPut(w http.ResponseWriter, r *http.Re
 	}
 	defer r.Body.Close()
 
-	m, err := app.InventorySvc.Update(&inventory, id)
+	m, err := app.InventorySvc.Update(inventory, id)
 	if err != nil {
 		if errors.Is(err, models.ErrMissingFields) {
 			utils.SendJSONResponse(w, http.StatusBadRequest, m)
 		} else if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "id is not a valid int"})
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else if errors.Is(err, models.ErrDuplicateInventory) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "duplicate inventory"})
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else if errors.Is(err, models.ErrNegativeQuantity) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "negative quantity"})
-		} else if errors.Is(err, models.ErrInvalidEnumType) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "invalid unit type", "supported types": "shots, ml, g, units"})
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
+		} else if errors.Is(err, models.ErrInvalidEnumTypeInventory) {
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": "Not Found"})
+			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
 		} else {
 			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "internal server error"})
 		}
@@ -102,9 +102,9 @@ func (app *application) inventoryDeleteByIDDelete(w http.ResponseWriter, r *http
 	err := app.InventorySvc.Delete(id)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "id is not a valid int"})
+			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
 		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": "Not Found"})
+			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
 		} else {
 			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"})
 		}

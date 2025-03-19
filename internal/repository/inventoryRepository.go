@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"frappuccino/internal/models"
-	"log"
+	"log/slog"
 
 	"github.com/lib/pq"
 )
@@ -12,23 +12,28 @@ import (
 type InventoryRepository interface {
 	Insert(name, unit string, quantity int, categories []string) error
 	RetrieveByID(id int) (models.Inventory, error)
-	RetrieveAll() (*[]models.Inventory, error)
+	RetrieveAll() ([]models.Inventory, error)
 	Update(id int, name, unit string, quantity int, categories []string) error
 	Delete(id int) error
 }
 
 type inventoryRepositoryPostgres struct {
-	pq *sql.DB
+	pq     *sql.DB
+	logger *slog.Logger
 }
 
-func NewInventoryRepositoryWithPostgres(db *sql.DB) *inventoryRepositoryPostgres {
-	return &inventoryRepositoryPostgres{pq: db}
+func NewInventoryRepositoryWithPostgres(db *sql.DB, logger *slog.Logger) *inventoryRepositoryPostgres {
+	return &inventoryRepositoryPostgres{
+		pq:     db,
+		logger: logger,
+	}
 }
 
 func (m *inventoryRepositoryPostgres) Insert(name, unit string, quantity int, categories []string) error {
 	stmt, err := m.pq.Prepare("INSERT INTO inventory (name, quantity, unit, categories) VALUES ($1, $2, $3, $4)")
 	if err != nil {
-		log.Fatal(err)
+		m.logger.Error("Failed to prepare statement", "error", err)
+		return err
 	}
 	defer stmt.Close()
 
@@ -41,7 +46,7 @@ func (m *inventoryRepositoryPostgres) Insert(name, unit string, quantity int, ca
 			case "23514":
 				return models.ErrNegativeQuantity
 			case "22P02":
-				return models.ErrInvalidEnumType
+				return models.ErrInvalidEnumTypeInventory
 			}
 		}
 		return err
@@ -53,7 +58,8 @@ func (m *inventoryRepositoryPostgres) Insert(name, unit string, quantity int, ca
 func (m *inventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory, error) {
 	stmt, err := m.pq.Prepare("SELECT * FROM inventory WHERE id = $1")
 	if err != nil {
-		log.Fatal(err)
+		m.logger.Error("Failed to prepare statement", "error", err)
+		return models.Inventory{}, err
 	}
 	defer stmt.Close()
 
@@ -75,10 +81,11 @@ func (m *inventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory, er
 	return inventory, nil
 }
 
-func (m *inventoryRepositoryPostgres) RetrieveAll() (*[]models.Inventory, error) {
+func (m *inventoryRepositoryPostgres) RetrieveAll() ([]models.Inventory, error) {
 	stmt, err := m.pq.Prepare("SELECT * FROM inventory")
 	if err != nil {
-		log.Fatal(err)
+		m.logger.Error("Failed to prepare statement", "error", err)
+		return []models.Inventory{}, err
 	}
 	defer stmt.Close()
 
@@ -110,13 +117,14 @@ func (m *inventoryRepositoryPostgres) RetrieveAll() (*[]models.Inventory, error)
 		return nil, err
 	}
 
-	return &InventoryAll, err
+	return InventoryAll, err
 }
 
 func (m *inventoryRepositoryPostgres) Update(id int, name, unit string, quantity int, categories []string) error {
 	stmt, err := m.pq.Prepare("UPDATE inventory SET name=$1, unit=$2, quantity=$3, categories=$4 WHERE id=$5")
 	if err != nil {
-		log.Fatal()
+		m.logger.Error("Failed to prepare statement", "error", err)
+		return err
 	}
 	defer stmt.Close()
 
@@ -132,7 +140,7 @@ func (m *inventoryRepositoryPostgres) Update(id int, name, unit string, quantity
 			case "23514":
 				return models.ErrNegativeQuantity
 			case "22P02":
-				return models.ErrInvalidEnumType
+				return models.ErrInvalidEnumTypeInventory
 			}
 		}
 
@@ -150,7 +158,8 @@ func (m *inventoryRepositoryPostgres) Update(id int, name, unit string, quantity
 func (m *inventoryRepositoryPostgres) Delete(id int) error {
 	stmt, err := m.pq.Prepare("DELETE FROM inventory WHERE id=$1")
 	if err != nil {
-		log.Fatal(err)
+		m.logger.Error("Failed to prepare statement", "error", err)
+		return err
 	}
 	defer stmt.Close()
 

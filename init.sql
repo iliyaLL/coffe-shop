@@ -20,7 +20,7 @@ CREATE TABLE menu_items (
     id serial primary key,
     name varchar(255) not null unique,
     description varchar(1000) not null,
-    price decimal(10, 2) not null
+    price decimal(10, 2) not null constraint positive_price CHECK (price >= 0)
 );
 
 CREATE TABLE price_history (
@@ -34,7 +34,7 @@ CREATE TABLE price_history (
 CREATE TABLE order_item (
     order_id int references orders (id) on delete cascade,
     menu_item_id int references menu_items (id) on delete cascade,
-    quantity int not null
+    quantity int not null constraint positive_quantity CHECK (quantity >= 0)
 );
 
 CREATE TYPE unit AS ENUM ('shots', 'ml', 'g', 'units');
@@ -58,7 +58,7 @@ CREATE TABLE inventory_transactions (
 CREATE TABLE menu_item_inventory (
     menu_id int references menu_items (id) on delete cascade,
     inventory_id int references inventory (id) on delete cascade,
-    quantity int not null
+    quantity int not null constraint positive_quantity CHECK (quantity >= 0)
 );
 
 INSERT INTO inventory (name, quantity, unit, categories) VALUES
