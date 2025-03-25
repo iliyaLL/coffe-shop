@@ -32,23 +32,8 @@ func (s *menuService) InsertMenu(menu models.MenuItem) (map[string]string, error
 		return errMap, models.ErrMissingFields
 	}
 
-	tx, err := s.menuRepo.BeginTransaction()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	menuID, err := s.menuRepo.InsertMenuItem(tx, menu)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.menuRepo.InsertMenuInventory(tx, menuID, menu.Inventory)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, tx.Commit()
+	err := s.menuRepo.InsertMenuItem(menu)
+	return nil, err
 }
 
 func (s *menuService) RetrieveAll() ([]models.MenuItem, error) {
@@ -79,28 +64,8 @@ func (s *menuService) Update(id string, menuItem models.MenuItem) (map[string]st
 		return errMap, models.ErrMissingFields
 	}
 
-	tx, err := s.menuRepo.BeginTransaction()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	err = s.menuRepo.UpdateMenuItem(tx, idInt, menuItem)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.menuRepo.DeleteMenuInventory(tx, idInt)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.menuRepo.InsertMenuInventory(tx, idInt, menuItem.Inventory)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, tx.Commit()
+	err = s.menuRepo.UpdateMenuItem(idInt, menuItem)
+	return nil, err
 }
 
 func (s *menuService) Delete(id string) error {

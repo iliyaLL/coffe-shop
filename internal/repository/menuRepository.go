@@ -10,14 +10,11 @@ import (
 )
 
 type MenuRepository interface {
-	InsertMenuItem(tx *sql.Tx, item models.MenuItem) (int, error)
-	InsertMenuInventory(tx *sql.Tx, menuID int, inventory []models.MenuItemInventory) error
+	InsertMenuItem(item models.MenuItem) error
 	RetrieveAll() ([]models.MenuItem, error)
 	RetrieveByID(id int) (models.MenuItem, error)
-	UpdateMenuItem(tx *sql.Tx, id int, menuItem models.MenuItem) error
-	DeleteMenuInventory(tx *sql.Tx, id int) error
+	UpdateMenuItem(menuID int, menuItem models.MenuItem) error
 	Delete(id int) error
-	BeginTransaction() (*sql.Tx, error)
 }
 
 type menuRepositoryPostgres struct {
@@ -32,35 +29,51 @@ func NewMenuRepositoryPostgres(db *sql.DB, logger *slog.Logger) *menuRepositoryP
 	}
 }
 
-func (m *menuRepositoryPostgres) BeginTransaction() (*sql.Tx, error) {
+func (m *menuRepositoryPostgres) InsertMenuItem(menuItem models.MenuItem) error {
 	tx, err := m.pq.Begin()
-
-	return tx, err
-}
-
-func (m *menuRepositoryPostgres) InsertMenuItem(tx *sql.Tx, menuItem models.MenuItem) (int, error) {
-	stmt, err := m.pq.Prepare("INSERT INTO menu_items (name, description, price) VALUES($1, $2, $3) RETURNING id")
 	if err != nil {
-		m.logger.Error("Failed to prepare statement", "error", err)
-		return -1, err
+		m.logger.Error("Failed to begin transaction", "error", err)
+		return err
 	}
-	defer stmt.Close()
+	defer tx.Rollback()
 
 	var menuID int
-	err = tx.Stmt(stmt).QueryRow(menuItem.Name, menuItem.Description, menuItem.Price).Scan(&menuID)
+	err = tx.QueryRow(`
+		INSERT INTO menu_items (name, description, price) 
+		VALUES ($1, $2, $3) RETURNING id
+	`, menuItem.Name, menuItem.Description, menuItem.Price).Scan(&menuID)
+
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
 			case "23505":
-				return -1, models.ErrDuplicateMenuItem
+				return models.ErrDuplicateMenuItem
 			case "23514":
-				return -1, models.ErrNegativePrice
+				return models.ErrNegativePrice
 			}
 		}
-		return -1, err
+		return err
 	}
 
-	return menuID, nil
+	for _, inv := range menuItem.Inventory {
+		_, err = tx.Exec(
+			"INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES ($1, $2, $3)",
+			menuID, inv.InventoryID, inv.Quantity,
+		)
+		if err != nil {
+			if pgErr, ok := err.(*pq.Error); ok {
+				switch pgErr.Code {
+				case "23503":
+					return models.ErrForeignKeyConstraintMenuInventory
+				case "23514":
+					return models.ErrNegativeQuantity
+				}
+			}
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (m *menuRepositoryPostgres) InsertMenuInventory(tx *sql.Tx, menuID int, inventory []models.MenuItemInventory) error {
@@ -190,13 +203,18 @@ func (m *menuRepositoryPostgres) RetrieveByID(id int) (models.MenuItem, error) {
 	return menuItem, nil
 }
 
-func (m *menuRepositoryPostgres) UpdateMenuItem(tx *sql.Tx, id int, menuItem models.MenuItem) error {
-	stmt := `
+func (m *menuRepositoryPostgres) UpdateMenuItem(menuID int, menuItem models.MenuItem) error {
+	tx, err := m.pq.Begin()
+	if err != nil {
+		m.logger.Error("Failed to begin transaction", "error", err)
+		return err
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec(`
 		UPDATE menu_items
-		SET name = $1, description = $2, price = $3
-		WHERE id = $4
-	`
-	result, err := tx.Exec(stmt, menuItem.Name, menuItem.Description, menuItem.Price, id)
+		SET name = $1, description = $2, price = $3 WHERE id = $4
+	`, menuItem.Name, menuItem.Description, menuItem.Price, menuID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.ErrNoRecord
@@ -217,7 +235,31 @@ func (m *menuRepositoryPostgres) UpdateMenuItem(tx *sql.Tx, id int, menuItem mod
 		return models.ErrNoRecord
 	}
 
-	return err
+	_, err = tx.Exec("DELETE FROM menu_item_inventory WHERE menu_id = $1", menuID)
+	if err != nil {
+		m.logger.Error("Failed to execute query", "error", err)
+		return err
+	}
+
+	for _, inv := range menuItem.Inventory {
+		_, err = tx.Exec(
+			"INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES ($1, $2, $3)",
+			menuID, inv.InventoryID, inv.Quantity,
+		)
+		if err != nil {
+			if pgErr, ok := err.(*pq.Error); ok {
+				switch pgErr.Code {
+				case "23503":
+					return models.ErrForeignKeyConstraintMenuInventory
+				case "23514":
+					return models.ErrNegativeQuantity
+				}
+			}
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (m *menuRepositoryPostgres) DeleteMenuInventory(tx *sql.Tx, id int) error {
