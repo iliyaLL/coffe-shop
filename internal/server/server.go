@@ -27,6 +27,7 @@ func (s *server) RunServer() {
 	app := handlers.NewApplication(s.logger,
 		service.NewInventoryService(s.db, s.logger),
 		service.NewMenuService(s.db, s.logger),
+		service.NewOrderService(s.db, s.logger),
 	)
 
 	srv := &http.Server{

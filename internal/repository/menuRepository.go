@@ -38,11 +38,9 @@ func (m *menuRepositoryPostgres) InsertMenuItem(menuItem models.MenuItem) error 
 	defer tx.Rollback()
 
 	var menuID int
-	err = tx.QueryRow(`
-		INSERT INTO menu_items (name, description, price) 
-		VALUES ($1, $2, $3) RETURNING id
-	`, menuItem.Name, menuItem.Description, menuItem.Price).Scan(&menuID)
-
+	err = tx.QueryRow(`INSERT INTO menu_items (name, description, price) VALUES ($1, $2, $3) RETURNING id`,
+		menuItem.Name, menuItem.Description, menuItem.Price).
+		Scan(&menuID)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
@@ -74,32 +72,6 @@ func (m *menuRepositoryPostgres) InsertMenuItem(menuItem models.MenuItem) error 
 	}
 
 	return tx.Commit()
-}
-
-func (m *menuRepositoryPostgres) InsertMenuInventory(tx *sql.Tx, menuID int, inventory []models.MenuItemInventory) error {
-	stmt, err := m.pq.Prepare("INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES($1, $2, $3)")
-	if err != nil {
-		m.logger.Error("Failed to prepare statement", "error", err)
-		return err
-	}
-	defer stmt.Close()
-
-	for _, inv := range inventory {
-		_, err = tx.Stmt(stmt).Exec(menuID, inv.InventoryID, inv.Quantity)
-		if err != nil {
-			if pgErr, ok := err.(*pq.Error); ok {
-				switch pgErr.Code {
-				case "23503":
-					return models.ErrForeignKeyConstraintMenuInventory
-				case "23514":
-					return models.ErrNegativeQuantity
-				}
-			}
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (m *menuRepositoryPostgres) RetrieveAll() ([]models.MenuItem, error) {
@@ -155,15 +127,14 @@ func (m *menuRepositoryPostgres) RetrieveAll() ([]models.MenuItem, error) {
 }
 
 func (m *menuRepositoryPostgres) RetrieveByID(id int) (models.MenuItem, error) {
-	stmt := `
+	rows, err := m.pq.Query(`
 		SELECT menu.id, menu.name, menu.description, menu.price, 
 		       inventory.inventory_id, inventory.quantity
 		FROM menu_items AS menu
 		LEFT JOIN menu_item_inventory AS inventory
 		ON menu.id = inventory.menu_id
 		WHERE menu.id = $1
-	`
-	rows, err := m.pq.Query(stmt, id)
+	`, id)
 	if err != nil {
 		m.logger.Error("Failed to execute query", "error", err)
 		return models.MenuItem{}, err
@@ -171,7 +142,6 @@ func (m *menuRepositoryPostgres) RetrieveByID(id int) (models.MenuItem, error) {
 	defer rows.Close()
 
 	var menuItem models.MenuItem
-
 	for rows.Next() {
 		var inventoryID, quantity sql.NullInt32
 
@@ -260,17 +230,6 @@ func (m *menuRepositoryPostgres) UpdateMenuItem(menuID int, menuItem models.Menu
 	}
 
 	return tx.Commit()
-}
-
-func (m *menuRepositoryPostgres) DeleteMenuInventory(tx *sql.Tx, id int) error {
-	stmt := "DELETE FROM menu_item_inventory WHERE menu_id = $1"
-	_, err := tx.Exec(stmt, id)
-	if err != nil {
-		m.logger.Error("Failed to execute query", "error", err)
-		return err
-	}
-
-	return nil
 }
 
 func (m *menuRepositoryPostgres) Delete(id int) error {

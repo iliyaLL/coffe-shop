@@ -15,5 +15,9 @@ var (
 
 	//Menu errors
 	ErrDuplicateMenuItem                 = errors.New("models: duplicate menu item")
-	ErrForeignKeyConstraintMenuInventory = errors.New("models: inventory does not exist")
+	ErrForeignKeyConstraintMenuInventory = errors.New("inventory does not exist")
+
+	//Order errors
+	ErrDuplicateOrder                = errors.New("models: duplicate order")
+	ErrForeignKeyConstraintOrderMenu = errors.New("menu item does not exist")
 )
