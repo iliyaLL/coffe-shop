@@ -20,7 +20,7 @@ CREATE TABLE menu_items (
     id serial primary key,
     name varchar(255) not null unique,
     description varchar(1000) not null,
-    price decimal(10, 2) not null
+    price decimal(10, 2) not null constraint positive_price CHECK (price >= 0)
 );
 
 CREATE TABLE price_history (
@@ -34,7 +34,7 @@ CREATE TABLE price_history (
 CREATE TABLE order_item (
     order_id int references orders (id) on delete cascade,
     menu_item_id int references menu_items (id) on delete cascade,
-    quantity int not null
+    quantity int not null constraint positive_quantity CHECK (quantity >= 0)
 );
 
 CREATE TYPE unit AS ENUM ('shots', 'ml', 'g', 'units');
@@ -58,7 +58,7 @@ CREATE TABLE inventory_transactions (
 CREATE TABLE menu_item_inventory (
     menu_id int references menu_items (id) on delete cascade,
     inventory_id int references inventory (id) on delete cascade,
-    quantity int not null
+    quantity int not null constraint positive_quantity CHECK (quantity >= 0)
 );
 
 INSERT INTO inventory (name, quantity, unit, categories) VALUES
@@ -79,3 +79,59 @@ INSERT INTO inventory (name, quantity, unit, categories) VALUES
 ('Pastry Dough', 5000, 'g', ARRAY['Baking']),
 ('Butter', 2000, 'g', ARRAY['Dairy']),
 ('Eggs', 300, 'units', ARRAY['Baking', 'Dairy']);
+
+-- Function for inventory quantity tracking
+CREATE OR REPLACE FUNCTION log_inventory_transaction()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.quantity <> NEW.quantity THEN
+        INSERT INTO inventory_transactions (inventory_id, old_quantity, new_quantity, transaction_date)
+        VALUES (NEW.id, OLD.quantity, NEW.quantity, NOW());
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to track quantity updates in inventory
+CREATE TRIGGER after_inventory_update
+AFTER UPDATE ON inventory
+FOR EACH ROW
+EXECUTE FUNCTION log_inventory_transaction();
+
+
+-- Function for price change tracking
+CREATE OR REPLACE FUNCTION log_price_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.price <> NEW.price THEN
+        INSERT INTO price_history (menu_item_id, old_price, new_price, updated_at)
+        VALUES (NEW.id, OLD.price, NEW.price, NOW());
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to track price updates in menu_items
+CREATE TRIGGER after_price_update
+AFTER UPDATE ON menu_items
+FOR EACH ROW
+EXECUTE FUNCTION log_price_change();
+
+
+-- Function for order status tracking
+CREATE OR REPLACE FUNCTION log_order_status_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.order_status <> NEW.order_status THEN
+        INSERT INTO order_status_history (order_id, updated_at, old_status, new_status)
+        VALUES (NEW.id, NOW(), OLD.order_status, NEW.order_status);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to track status updates in orders
+CREATE TRIGGER after_order_status_update
+AFTER UPDATE ON orders
+FOR EACH ROW
+EXECUTE FUNCTION log_order_status_change();

@@ -10,10 +10,10 @@ type Inventory struct {
 
 type inventoryValidator struct {
 	validator map[string]string
-	inventory *Inventory
+	inventory Inventory
 }
 
-func NewInventoryValidator(inventory *Inventory) *inventoryValidator {
+func NewInventoryValidator(inventory Inventory) *inventoryValidator {
 	return &inventoryValidator{
 		make(map[string]string),
 		inventory,
@@ -27,10 +27,12 @@ func (v *inventoryValidator) Validate() map[string]string {
 	if v.inventory.Unit == "" {
 		v.validator["Unit"] = "missing Unit"
 	}
+	if v.inventory.Quantity < 0 {
+		v.validator["Quantity"] = "Quantity must be 0 or more"
+	}
 
 	if len(v.validator) > 0 {
 		return v.validator
-	} else {
-		return nil
 	}
+	return nil
 }

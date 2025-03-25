@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
+	"log/slog"
 	"strconv"
 )
 
 type InventoryService interface {
-	Insert(inventory *models.Inventory) (map[string]string, error)
+	Insert(inventory models.Inventory) (map[string]string, error)
 	RetrieveByID(id string) (models.Inventory, error)
-	RetrieveAll() (*[]models.Inventory, error)
-	Update(inventory *models.Inventory, id string) (map[string]string, error)
+	RetrieveAll() ([]models.Inventory, error)
+	Update(inventory models.Inventory, id string) (map[string]string, error)
 	Delete(id string) error
 }
 
@@ -19,16 +20,16 @@ type inventoryService struct {
 	inventoryRepo repository.InventoryRepository
 }
 
-func NewInventoryService(db *sql.DB) *inventoryService {
-	svc := &inventoryService{}
-	svc.inventoryRepo = repository.NewInventoryRepositoryWithPostgres(db)
-	return svc
+func NewInventoryService(db *sql.DB, logger *slog.Logger) *inventoryService {
+	return &inventoryService{
+		inventoryRepo: repository.NewInventoryRepositoryWithPostgres(db, logger),
+	}
 }
 
-func (s *inventoryService) Insert(inventory *models.Inventory) (map[string]string, error) {
+func (s *inventoryService) Insert(inventory models.Inventory) (map[string]string, error) {
 	validator := models.NewInventoryValidator(inventory)
 	m := validator.Validate()
-	if len(m) > 0 {
+	if m != nil {
 		return m, models.ErrMissingFields
 	}
 
@@ -48,13 +49,13 @@ func (s *inventoryService) RetrieveByID(id string) (models.Inventory, error) {
 	return inventory, err
 }
 
-func (s *inventoryService) RetrieveAll() (*[]models.Inventory, error) {
+func (s *inventoryService) RetrieveAll() ([]models.Inventory, error) {
 	inventory, err := s.inventoryRepo.RetrieveAll()
 
 	return inventory, err
 }
 
-func (s *inventoryService) Update(inventory *models.Inventory, id string) (map[string]string, error) {
+func (s *inventoryService) Update(inventory models.Inventory, id string) (map[string]string, error) {
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, models.ErrInvalidID
