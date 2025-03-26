@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"frappuccino/internal/models"
 	"frappuccino/internal/utils"
@@ -20,16 +19,8 @@ func (app *application) menuCreatePost(w http.ResponseWriter, r *http.Request) {
 
 	m, err := app.MenuSvc.InsertMenu(menuItem)
 	if err != nil {
-		if errors.Is(err, models.ErrMissingFields) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": m})
-		} else if errors.Is(err, models.ErrDuplicateMenuItem) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrForeignKeyConstraintMenuInventory) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "internal server error"})
-		}
-
+		status, body := mapErrorToResponse(err, m)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 
@@ -50,13 +41,8 @@ func (app *application) menuRetrieveAllByIDGet(w http.ResponseWriter, r *http.Re
 	id := r.PathValue("id")
 	menuItem, err := app.MenuSvc.RetrieveByID(id)
 	if err != nil {
-		if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server error"})
-		}
+		status, body := mapErrorToResponse(err, nil)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 
@@ -75,38 +61,20 @@ func (app *application) menuUpdate(w http.ResponseWriter, r *http.Request) {
 
 	m, err := app.MenuSvc.Update(id, menuItem)
 	if err != nil {
-		if errors.Is(err, models.ErrMissingFields) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, m)
-		} else if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrDuplicateMenuItem) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNegativePrice) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrForeignKeyConstraintMenuInventory) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "internal server error"})
-		}
+		status, body := mapErrorToResponse(err, m)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 
-	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": "OK"})
+	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": fmt.Sprintf("Updated menu item %s", id)})
 }
 
 func (app *application) menuDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := app.MenuSvc.Delete(id)
 	if err != nil {
-		if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"})
-		}
+		status, body := mapErrorToResponse(err, nil)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 

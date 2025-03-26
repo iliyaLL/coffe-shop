@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"frappuccino/internal/models"
 	"frappuccino/internal/utils"
@@ -20,17 +19,8 @@ func (app *application) inventoryCreatePost(w http.ResponseWriter, r *http.Reque
 
 	m, err := app.InventorySvc.Insert(inventory)
 	if err != nil {
-		if errors.Is(err, models.ErrDuplicateInventory) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNegativeQuantity) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrMissingFields) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, m)
-		} else if errors.Is(err, models.ErrInvalidEnumTypeInventory) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "internal server error"})
-		}
+		status, body := mapErrorToResponse(err, m)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 
@@ -51,13 +41,8 @@ func (app *application) inventoryRetrieveByIDGet(w http.ResponseWriter, r *http.
 	id := r.PathValue("id")
 	inventory, err := app.InventorySvc.RetrieveByID(id)
 	if err != nil {
-		if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server error"})
-		}
+		status, body := mapErrorToResponse(err, nil)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 
@@ -76,38 +61,20 @@ func (app *application) inventoryUpdateByIDPut(w http.ResponseWriter, r *http.Re
 
 	m, err := app.InventorySvc.Update(inventory, id)
 	if err != nil {
-		if errors.Is(err, models.ErrMissingFields) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, m)
-		} else if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrDuplicateInventory) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNegativeQuantity) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrInvalidEnumTypeInventory) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "internal server error"})
-		}
+		status, body := mapErrorToResponse(err, m)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 
-	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": "OK"})
+	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": fmt.Sprintf("Updated inventory %s", id)})
 }
 
 func (app *application) inventoryDeleteByIDDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := app.InventorySvc.Delete(id)
 	if err != nil {
-		if errors.Is(err, models.ErrInvalidID) {
-			utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": err.Error()})
-		} else if errors.Is(err, models.ErrNoRecord) {
-			utils.SendJSONResponse(w, http.StatusNotFound, utils.Response{"error": err.Error()})
-		} else {
-			utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"})
-		}
+		status, body := mapErrorToResponse(err, nil)
+		utils.SendJSONResponse(w, status, body)
 		return
 	}
 
