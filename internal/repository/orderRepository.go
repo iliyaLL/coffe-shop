@@ -51,6 +51,7 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 		order.CustomerName, "open", prefsJSON).
 		Scan(&orderID)
 	if err != nil {
+		m.logger.Error(err.Error())
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
 			case "23505":
@@ -66,6 +67,7 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 		_, err = tx.Exec("INSERT INTO order_item (order_id, menu_item_id, quantity) VALUES ($1, $2, $3)",
 			orderID, menu.MenuID, menu.Quantity)
 		if err != nil {
+			m.logger.Error(err.Error())
 			if pgErr, ok := err.(*pq.Error); ok {
 				switch pgErr.Code {
 				case "23503":
@@ -79,6 +81,7 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 
 		rows, err := tx.Query("SELECT inventory_id, quantity FROM menu_item_inventory WHERE menu_id=$1", menu.MenuID)
 		if err != nil {
+			m.logger.Error(err.Error())
 			return err
 		}
 		defer rows.Close()
@@ -99,6 +102,7 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 		for _, item := range inventoryList {
 			_, err := tx.Exec("UPDATE inventory SET quantity = quantity - $1 WHERE id = $2", item.totalNeeded, item.inventoryID)
 			if err != nil {
+				m.logger.Error(err.Error())
 				if pqErr, ok := err.(*pq.Error); ok {
 					switch pqErr.Code {
 					case "23514":
@@ -263,6 +267,7 @@ func (m *orderRepositoryPostgres) Update(orderID int, order models.Order) error 
 		WHERE id = $4
 	`, order.CustomerName, order.Status, prefsJSON, orderID)
 	if err != nil {
+		m.logger.Error(err.Error())
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
 			case "23505":
@@ -294,6 +299,7 @@ func (m *orderRepositoryPostgres) Update(orderID int, order models.Order) error 
 			orderID, item.MenuID, item.Quantity,
 		)
 		if err != nil {
+			m.logger.Error(err.Error())
 			if pgErr, ok := err.(*pq.Error); ok {
 				switch pgErr.Code {
 				case "23503":
