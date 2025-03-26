@@ -11,15 +11,22 @@ type application struct {
 	InventorySvc service.InventoryService
 	MenuSvc      service.MenuService
 	OrderSvc     service.OrderService
+	ReportSvc    service.ReportService
 	// add more services
 }
 
-func NewApplication(logger *slog.Logger, inventorySvc service.InventoryService, menuSvc service.MenuService, orderSvc service.OrderService) *application {
+func NewApplication(logger *slog.Logger,
+	inventorySvc service.InventoryService,
+	menuSvc service.MenuService,
+	orderSvc service.OrderService,
+	reportSvc service.ReportService,
+) *application {
 	return &application{
 		logger:       logger,
 		InventorySvc: inventorySvc,
 		MenuSvc:      menuSvc,
 		OrderSvc:     orderSvc,
+		ReportSvc:    reportSvc,
 		// add more services
 	}
 }
@@ -53,6 +60,9 @@ func (app *application) Routes() http.Handler {
 		"PUT /orders/{id}":        app.orderUpdateByID,
 		"DELETE /orders/{id}":     app.orderDeleteByID,
 		"POST /orders/{id}/close": app.orderCloseByID,
+
+		// aggregations endpoints
+		"GET /reports/total-sales": app.getTotalSalesReport,
 	}
 
 	for endpoint, f := range endpoints {

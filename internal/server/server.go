@@ -28,6 +28,7 @@ func (s *server) RunServer() {
 		service.NewInventoryService(s.db, s.logger),
 		service.NewMenuService(s.db, s.logger),
 		service.NewOrderService(s.db, s.logger),
+		service.NewReportService(s.db, s.logger),
 	)
 
 	srv := &http.Server{
