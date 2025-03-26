@@ -9,6 +9,7 @@ import (
 
 type ReportService interface {
 	GetTotalSales() (models.ReportTotalSales, error)
+	GetPopularMenuItems() ([]models.ReportPopularItem, error)
 }
 
 type reportService struct {
@@ -23,4 +24,10 @@ func (s *reportService) GetTotalSales() (models.ReportTotalSales, error) {
 	report, err := s.reportRepo.GetTotalSales()
 
 	return report, err
+}
+
+func (s *reportService) GetPopularMenuItems() ([]models.ReportPopularItem, error) {
+	popularItems, err := s.reportRepo.GetPopularMenuItems()
+
+	return popularItems, err
 }

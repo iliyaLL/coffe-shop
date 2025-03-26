@@ -62,7 +62,8 @@ func (app *application) Routes() http.Handler {
 		"POST /orders/{id}/close": app.orderCloseByID,
 
 		// aggregations endpoints
-		"GET /reports/total-sales": app.getTotalSalesReport,
+		"GET /reports/total-sales":   app.getTotalSalesReport,
+		"GET /reports/popular-items": app.getPopularMenuItems,
 	}
 
 	for endpoint, f := range endpoints {
