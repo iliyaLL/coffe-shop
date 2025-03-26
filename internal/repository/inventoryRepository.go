@@ -30,14 +30,10 @@ func NewInventoryRepositoryWithPostgres(db *sql.DB, logger *slog.Logger) *invent
 }
 
 func (m *inventoryRepositoryPostgres) Insert(name, unit string, quantity int, categories []string) error {
-	stmt, err := m.pq.Prepare("INSERT INTO inventory (name, quantity, unit, categories) VALUES ($1, $2, $3, $4)")
-	if err != nil {
-		m.logger.Error("Failed to prepare statement", "error", err)
-		return err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(name, quantity, unit, pq.Array(categories))
+	_, err := m.pq.Exec(
+		"INSERT INTO inventory (name, quantity, unit, categories) VALUES ($1, $2, $3, $4)",
+		name, quantity, unit, pq.Array(categories),
+	)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
@@ -56,15 +52,8 @@ func (m *inventoryRepositoryPostgres) Insert(name, unit string, quantity int, ca
 }
 
 func (m *inventoryRepositoryPostgres) RetrieveByID(id int) (models.Inventory, error) {
-	stmt, err := m.pq.Prepare("SELECT * FROM inventory WHERE id = $1")
-	if err != nil {
-		m.logger.Error("Failed to prepare statement", "error", err)
-		return models.Inventory{}, err
-	}
-	defer stmt.Close()
-
 	var inventory models.Inventory
-	err = stmt.QueryRow(id).Scan(
+	err := m.pq.QueryRow("SELECT * FROM inventory WHERE id = $1", id).Scan(
 		&inventory.ID,
 		&inventory.Name,
 		&inventory.Quantity,
@@ -115,14 +104,10 @@ func (m *inventoryRepositoryPostgres) RetrieveAll() ([]models.Inventory, error) 
 }
 
 func (m *inventoryRepositoryPostgres) Update(id int, name, unit string, quantity int, categories []string) error {
-	stmt, err := m.pq.Prepare("UPDATE inventory SET name=$1, unit=$2, quantity=$3, categories=$4 WHERE id=$5")
-	if err != nil {
-		m.logger.Error("Failed to prepare statement", "error", err)
-		return err
-	}
-	defer stmt.Close()
-
-	result, err := stmt.Exec(name, unit, quantity, pq.Array(categories), id)
+	result, err := m.pq.Exec(
+		"UPDATE inventory SET name=$1, unit=$2, quantity=$3, categories=$4 WHERE id=$5",
+		name, unit, quantity, pq.Array(categories), id,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.ErrNoRecord
@@ -150,14 +135,7 @@ func (m *inventoryRepositoryPostgres) Update(id int, name, unit string, quantity
 }
 
 func (m *inventoryRepositoryPostgres) Delete(id int) error {
-	stmt, err := m.pq.Prepare("DELETE FROM inventory WHERE id=$1")
-	if err != nil {
-		m.logger.Error("Failed to prepare statement", "error", err)
-		return err
-	}
-	defer stmt.Close()
-
-	result, err := stmt.Exec(id)
+	result, err := m.pq.Exec("DELETE FROM inventory WHERE id=$1", id)
 	if err != nil {
 		return err
 	}
