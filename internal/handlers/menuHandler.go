@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (app *application) menuCreatePost(w http.ResponseWriter, r *http.Request) {
+func (app *application) menuCreate(w http.ResponseWriter, r *http.Request) {
 	var menuItem models.MenuItem
 	err := json.NewDecoder(r.Body).Decode(&menuItem)
 	if err != nil {
@@ -19,7 +19,7 @@ func (app *application) menuCreatePost(w http.ResponseWriter, r *http.Request) {
 
 	m, err := app.MenuSvc.InsertMenu(menuItem)
 	if err != nil {
-		status, body := mapErrorToResponse(err, m)
+		status, body := utils.MapErrorToResponse(err, m)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -27,7 +27,7 @@ func (app *application) menuCreatePost(w http.ResponseWriter, r *http.Request) {
 	utils.SendJSONResponse(w, http.StatusCreated, utils.Response{"message": "created"})
 }
 
-func (app *application) menuRetrieveAllGet(w http.ResponseWriter, r *http.Request) {
+func (app *application) menuRetrieveAll(w http.ResponseWriter, r *http.Request) {
 	menuItems, err := app.MenuSvc.RetrieveAll()
 	if err != nil {
 		utils.SendJSONResponse(w, http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"})
@@ -37,11 +37,11 @@ func (app *application) menuRetrieveAllGet(w http.ResponseWriter, r *http.Reques
 	utils.SendJSONResponse(w, http.StatusOK, menuItems)
 }
 
-func (app *application) menuRetrieveAllByIDGet(w http.ResponseWriter, r *http.Request) {
+func (app *application) menuRetrieveAllByID(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	menuItem, err := app.MenuSvc.RetrieveByID(id)
 	if err != nil {
-		status, body := mapErrorToResponse(err, nil)
+		status, body := utils.MapErrorToResponse(err, nil)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -61,7 +61,7 @@ func (app *application) menuUpdate(w http.ResponseWriter, r *http.Request) {
 
 	m, err := app.MenuSvc.Update(id, menuItem)
 	if err != nil {
-		status, body := mapErrorToResponse(err, m)
+		status, body := utils.MapErrorToResponse(err, m)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -73,7 +73,7 @@ func (app *application) menuDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := app.MenuSvc.Delete(id)
 	if err != nil {
-		status, body := mapErrorToResponse(err, nil)
+		status, body := utils.MapErrorToResponse(err, nil)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}

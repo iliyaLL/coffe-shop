@@ -19,7 +19,7 @@ func (app *application) orderCreate(w http.ResponseWriter, r *http.Request) {
 
 	m, err := app.OrderSvc.Insert(order)
 	if err != nil {
-		status, body := mapErrorToResponse(err, m)
+		status, body := utils.MapErrorToResponse(err, m)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -30,7 +30,7 @@ func (app *application) orderCreate(w http.ResponseWriter, r *http.Request) {
 func (app *application) orderRetrieveAll(w http.ResponseWriter, r *http.Request) {
 	orders, err := app.OrderSvc.RetrieveAll()
 	if err != nil {
-		status, body := mapErrorToResponse(err, nil)
+		status, body := utils.MapErrorToResponse(err, nil)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -42,7 +42,7 @@ func (app *application) orderRetrieveByID(w http.ResponseWriter, r *http.Request
 	id := r.PathValue("id")
 	order, err := app.OrderSvc.RetrieveByID(id)
 	if err != nil {
-		status, body := mapErrorToResponse(err, nil)
+		status, body := utils.MapErrorToResponse(err, nil)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -62,7 +62,7 @@ func (app *application) orderUpdateByID(w http.ResponseWriter, r *http.Request) 
 
 	m, err := app.OrderSvc.Update(id, order)
 	if err != nil {
-		status, body := mapErrorToResponse(err, m)
+		status, body := utils.MapErrorToResponse(err, m)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -74,7 +74,7 @@ func (app *application) orderDeleteByID(w http.ResponseWriter, r *http.Request) 
 	id := r.PathValue("id")
 	err := app.OrderSvc.Delete(id)
 	if err != nil {
-		status, body := mapErrorToResponse(err, nil)
+		status, body := utils.MapErrorToResponse(err, nil)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}
@@ -86,7 +86,7 @@ func (app *application) orderCloseByID(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := app.OrderSvc.Close(id)
 	if err != nil {
-		status, body := mapErrorToResponse(err, nil)
+		status, body := utils.MapErrorToResponse(err, nil)
 		utils.SendJSONResponse(w, status, body)
 		return
 	}

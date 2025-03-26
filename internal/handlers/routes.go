@@ -1,10 +1,7 @@
 package handlers
 
 import (
-	"errors"
-	"frappuccino/internal/models"
 	"frappuccino/internal/service"
-	"frappuccino/internal/utils"
 	"log/slog"
 	"net/http"
 )
@@ -27,59 +24,25 @@ func NewApplication(logger *slog.Logger, inventorySvc service.InventoryService, 
 	}
 }
 
-func mapErrorToResponse(err error, validationMap any) (int, any) {
-	switch {
-	// General errors
-	case errors.Is(err, models.ErrInvalidID):
-		return http.StatusBadRequest, utils.Response{"error": err.Error()}
-	case errors.Is(err, models.ErrNoRecord):
-		return http.StatusNotFound, utils.Response{"error": err.Error()}
-	case errors.Is(err, models.ErrMissingFields):
-		return http.StatusBadRequest, validationMap
-
-	// Inventory errors
-	case errors.Is(err, models.ErrDuplicateInventory),
-		errors.Is(err, models.ErrNegativeQuantity),
-		errors.Is(err, models.ErrInvalidEnumTypeInventory):
-		return http.StatusBadRequest, utils.Response{"error": err.Error()}
-
-	// Menu errors
-	case errors.Is(err, models.ErrDuplicateMenuItem),
-		errors.Is(err, models.ErrNegativePrice),
-		errors.Is(err, models.ErrForeignKeyConstraintMenuInventory):
-		return http.StatusBadRequest, utils.Response{"error": err.Error()}
-
-	// Order errors
-	case errors.Is(err, models.ErrDuplicateOrder),
-		errors.Is(err, models.ErrForeignKeyConstraintOrderMenu):
-		return http.StatusBadRequest, utils.Response{"error": err.Error()}
-
-	// Default catch-all
-	default:
-		return http.StatusInternalServerError, utils.Response{"error": "Internal Server Error"}
-	}
-}
-
 func (app *application) Routes() http.Handler {
 	router := http.NewServeMux()
 	commonMiddleware := []Middleware{
 		app.recoverPanic,
 		app.logRequest,
-		contentTypeJSON,
 	}
 
 	endpoints := map[string]http.HandlerFunc{
 		// inventory endpoints
-		"POST /inventory":        app.inventoryCreatePost,
-		"GET /inventory":         app.inventoryRetreiveAllGet,
-		"GET /inventory/{id}":    app.inventoryRetrieveByIDGet,
-		"PUT /inventory/{id}":    app.inventoryUpdateByIDPut,
-		"DELETE /inventory/{id}": app.inventoryDeleteByIDDelete,
+		"POST /inventory":        app.inventoryCreate,
+		"GET /inventory":         app.inventoryRetreiveAll,
+		"GET /inventory/{id}":    app.inventoryRetrieveByID,
+		"PUT /inventory/{id}":    app.inventoryUpdateByID,
+		"DELETE /inventory/{id}": app.inventoryDeleteByID,
 
 		// menu endpoints
-		"POST /menu":        app.menuCreatePost,
-		"GET /menu":         app.menuRetrieveAllGet,
-		"GET /menu/{id}":    app.menuRetrieveAllByIDGet,
+		"POST /menu":        app.menuCreate,
+		"GET /menu":         app.menuRetrieveAll,
+		"GET /menu/{id}":    app.menuRetrieveAllByID,
 		"PUT /menu/{id}":    app.menuUpdate,
 		"DELETE /menu/{id}": app.menuDelete,
 
