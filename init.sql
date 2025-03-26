@@ -4,7 +4,7 @@ CREATE TABLE orders (
     id serial primary key,
     customer_name varchar(255) not null,
     order_status status not null,
-    created_at timestamp not null,
+    created_at timestamp not null default now(),
     customer_preferences jsonb not null default '{}'::jsonb
 );
 
@@ -79,6 +79,72 @@ INSERT INTO inventory (name, quantity, unit, categories) VALUES
 ('Pastry Dough', 5000, 'g', ARRAY['Baking']),
 ('Butter', 2000, 'g', ARRAY['Dairy']),
 ('Eggs', 300, 'units', ARRAY['Baking', 'Dairy']);
+
+
+
+INSERT INTO menu_items (id, name, description, price) VALUES
+(30, 'Blueberry Muffin', 'Freshly baked muffin with blueberries', 2.00),
+(31, 'Raspberry Muffin', 'Muffin with fresh raspberries', 2.00),
+(32, 'Strawberry Muffin', 'Freshly baked muffin with strawberries', 2.00),
+(33, 'Caffe Latte', 'Espresso with steamed milk', 3.50),
+(34, 'Espresso', 'A strong shot of coffee', 2.00),
+(35, 'Vanilla Cappuccino', 'Espresso with vanilla syrup and foam', 3.80),
+(36, 'Caramel Macchiato', 'Espresso with caramel syrup and steamed milk', 4.20),
+(37, 'Chocolate Frappe', 'Blended chocolate drink with whipped cream', 4.50);
+
+
+-- Blueberry Muffin
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(30, 3, 100),  -- Flour
+(30, 4, 50),   -- Blueberries
+(30, 6, 10),   -- Sugar
+(30, 15, 100), -- Pastry Dough
+(30, 16, 20);  -- Butter
+
+-- Raspberry Muffin
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(31, 3, 100),
+(31, 5, 50),
+(31, 6, 10),
+(31, 15, 100),
+(31, 16, 20);
+
+-- Strawberry Muffin
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(32, 3, 100),
+(32, 1, 30),
+(32, 10, 20),
+(32, 2, 100),
+(32, 16, 20);
+
+-- Caffe Latte
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(33, 1, 1),    -- Espresso Shot
+(33, 2, 200);  -- Milk
+
+-- Espresso
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(34, 1, 1);
+
+-- Vanilla Cappuccino
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(35, 1, 1),
+(35, 2, 150),
+(35, 9, 30); -- Vanilla Syrup
+
+-- Caramel Macchiato
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(36, 1, 1),
+(36, 2, 200),
+(36, 10, 30); -- Caramel Syrup
+
+-- Chocolate Frappe
+INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
+(37, 11, 100), -- Chocolate Syrup
+(37, 2, 100),
+(37, 12, 50);  -- Whipped Cream
+
+
 
 -- Function for inventory quantity tracking
 CREATE OR REPLACE FUNCTION log_inventory_transaction()
