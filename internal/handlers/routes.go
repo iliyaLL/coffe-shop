@@ -53,6 +53,9 @@ func (app *application) Routes() http.Handler {
 		"PUT /orders/{id}":        app.orderUpdateByID,
 		"DELETE /orders/{id}":     app.orderDeleteByID,
 		"POST /orders/{id}/close": app.orderCloseByID,
+
+		// new endpoints
+		"GET /orders/numberOfOrderedItems": app.numberOfOrderedItems, // ?startDate={startDate}&endDate={endDate}
 	}
 
 	for endpoint, f := range endpoints {

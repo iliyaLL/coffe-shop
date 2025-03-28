@@ -5,6 +5,7 @@ import (
 	"errors"
 	"frappuccino/internal/models"
 	"net/http"
+	"time"
 )
 
 // sending responses in the json format
@@ -51,4 +52,16 @@ func MapErrorToResponse(err error, validationMap any) (int, any) {
 	default:
 		return http.StatusInternalServerError, Response{"error": "Internal Server Error"}
 	}
+}
+
+func ConvertDateFormat(dateStr string) string {
+	date, err := time.Parse("02.01.2006", dateStr)
+	if err == nil {
+		return date.Format("2006-01-02")
+	}
+	date, err = time.Parse("2006-01-02", dateStr)
+	if err == nil {
+		return date.Format("2006-01-02")
+	}
+	return ""
 }
