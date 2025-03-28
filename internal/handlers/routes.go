@@ -61,6 +61,9 @@ func (app *application) Routes() http.Handler {
 		"DELETE /orders/{id}":     app.orderDeleteByID,
 		"POST /orders/{id}/close": app.orderCloseByID,
 
+		// new endpoints
+		"GET /orders/numberOfOrderedItems": app.numberOfOrderedItems, // ?startDate={startDate}&endDate={endDate}
+
 		// aggregations endpoints
 		"GET /reports/total-sales":   app.getTotalSalesReport,
 		"GET /reports/popular-items": app.getPopularMenuItems,

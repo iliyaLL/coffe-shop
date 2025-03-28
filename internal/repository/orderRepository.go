@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"frappuccino/internal/models"
 	"log/slog"
 	"time"
@@ -17,6 +18,7 @@ type OrderRepository interface {
 	Update(orderID int, order models.Order) error
 	Delete(id int) error
 	Close(id int) error
+	NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error)
 }
 
 type orderRepositoryPostgres struct {
@@ -348,4 +350,42 @@ func (m *orderRepositoryPostgres) Close(id int) error {
 	}
 
 	return nil
+}
+
+func (m *orderRepositoryPostgres) NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error) {
+	subquery := "SELECT * FROM orders"
+	if (startDate != "" || endDate != "") {
+		subquery += " WHERE "
+		if (startDate != "") {
+			subquery += fmt.Sprintf("created_at::date >= '%v'", startDate)
+			if (endDate != "") {
+				subquery += fmt.Sprintf(" AND created_at::date <= '%v'", endDate)
+			}
+		} else {
+			subquery += fmt.Sprintf("created_at::date <= '%v'", endDate)
+		}
+	}
+	rows, err := m.pq.Query(fmt.Sprintf(`
+		SELECT mi.name as menu_item, SUM(oi.quantity) as quantity
+		FROM (%v) o
+		JOIN order_item oi ON oi.order_id = o.id
+		JOIN menu_items mi ON oi.menu_item_id = mi.id
+		GROUP BY mi.id, mi.name
+	`, subquery))
+	if err != nil {
+		m.logger.Error("Failed to execute order query", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	mp := make(map[string]int)
+	for rows.Next() {
+		var name string
+		var quantity int
+		if err = rows.Scan(&name, &quantity); err != nil {
+			return nil, err
+		}
+		mp[name] = quantity
+	}
+	return mp, nil
 }
