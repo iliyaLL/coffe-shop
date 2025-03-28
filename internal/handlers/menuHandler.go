@@ -3,9 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"frappuccino/internal/models"
 	"frappuccino/internal/utils"
-	"net/http"
 )
 
 func (app *application) menuCreate(w http.ResponseWriter, r *http.Request) {

@@ -2,13 +2,19 @@ package repository
 
 import (
 	"database/sql"
-	"frappuccino/internal/models"
+	"fmt"
 	"log/slog"
+
+	"frappuccino/internal/models"
+
+	"github.com/lib/pq"
 )
 
 type ReportRepository interface {
 	GetTotalSales() (models.ReportTotalSales, error)
 	GetPopularMenuItems() ([]models.ReportPopularItem, error)
+	TextSearchMenu(query string, minPrice float64, maxPrice float64) ([]models.ReportMenuSearchItem, error)
+	TextSearchOrders(query string, minPrice float64, maxPrice float64) ([]models.ReportOrderSearchItem, error)
 }
 
 type reportRepositoryPostgres struct {
@@ -80,4 +86,90 @@ func (m *reportRepositoryPostgres) GetPopularMenuItems() ([]models.ReportPopular
 	}
 
 	return popularItems, nil
+}
+
+func (m *reportRepositoryPostgres) TextSearchMenu(query string, minPrice float64, maxPrice float64) ([]models.ReportMenuSearchItem, error) {
+	queryArgs := []any{query}
+	dbQuery := `
+		WITH q AS (
+			SELECT plainto_tsquery('english', $1) as q
+		)
+		SELECT id, name, description, price, ts_rank(tsv, q.q) as relevance
+		FROM menu_items
+		CROSS JOIN q
+		WHERE tsv @@ q.q`
+	if minPrice != -1 {
+		fmt.Println(minPrice)
+		queryArgs = append(queryArgs, minPrice)
+		dbQuery += fmt.Sprintf(" AND price >= $%v", len(queryArgs))
+	}
+	if maxPrice != -1 {
+		fmt.Println(maxPrice)
+		queryArgs = append(queryArgs, maxPrice)
+		dbQuery += fmt.Sprintf(" AND price <= $%v", len(queryArgs))
+	}
+	dbQuery += "\nORDER BY relevance desc;"
+
+	rows, err := m.pq.Query(dbQuery, queryArgs...)
+	if err != nil {
+		m.logger.Error(err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.ReportMenuSearchItem
+	for rows.Next() {
+		var resItem models.ReportMenuSearchItem
+		err = rows.Scan(&resItem.Id, &resItem.Name, &resItem.Description, &resItem.Price, &resItem.Relevance)
+		if err != nil {
+			m.logger.Error(err.Error())
+			return nil, err
+		}
+		results = append(results, resItem)
+	}
+	return results, nil
+}
+
+func (m *reportRepositoryPostgres) TextSearchOrders(query string, minPrice float64, maxPrice float64) ([]models.ReportOrderSearchItem, error) {
+	queryArgs := []any{query}
+	dbQuery := `
+		WITH q AS (
+			SELECT plainto_tsquery('english', $1) as q
+		)
+		SELECT o.id, o.customer_name, array_agg(mi.name), SUM(oi.quantity * mi.price), MAX(ts_rank(mi.tsv, q.q)) as relevance
+		FROM menu_items mi
+		CROSS JOIN q
+		JOIN order_item oi ON mi.id = oi.menu_item_id
+		JOIN orders o ON o.id = oi.order_id
+		WHERE mi.tsv @@ q.q`
+	if minPrice != -1 {
+		queryArgs = append(queryArgs, minPrice)
+		dbQuery += fmt.Sprintf(" AND mi.price >= $%v", len(queryArgs))
+	}
+	if maxPrice != -1 {
+		queryArgs = append(queryArgs, maxPrice)
+		dbQuery += fmt.Sprintf(" AND mi.price <= $%v", len(queryArgs))
+	}
+	dbQuery += `
+		GROUP BY o.id, o.customer_name
+		ORDER BY relevance desc;`
+
+	rows, err := m.pq.Query(dbQuery, queryArgs...)
+	if err != nil {
+		m.logger.Error(err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.ReportOrderSearchItem
+	for rows.Next() {
+		var resItem models.ReportOrderSearchItem
+		err = rows.Scan(&resItem.Id, &resItem.CustomerName, pq.Array(&resItem.Items), &resItem.Total, &resItem.Relevance)
+		if err != nil {
+			m.logger.Error(err.Error())
+			return nil, err
+		}
+		results = append(results, resItem)
+	}
+	return results, nil
 }

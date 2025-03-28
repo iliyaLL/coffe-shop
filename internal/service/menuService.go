@@ -2,10 +2,11 @@ package service
 
 import (
 	"database/sql"
-	"frappuccino/internal/models"
-	"frappuccino/internal/repository"
 	"log/slog"
 	"strconv"
+
+	"frappuccino/internal/models"
+	"frappuccino/internal/repository"
 )
 
 type MenuService interface {

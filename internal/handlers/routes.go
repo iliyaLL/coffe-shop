@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"frappuccino/internal/service"
 	"log/slog"
 	"net/http"
+
+	"frappuccino/internal/service"
 )
 
 type application struct {
@@ -64,6 +65,7 @@ func (app *application) Routes() http.Handler {
 		// aggregations endpoints
 		"GET /reports/total-sales":   app.getTotalSalesReport,
 		"GET /reports/popular-items": app.getPopularMenuItems,
+		"GET /reports/search":        app.textSearch,
 	}
 
 	for endpoint, f := range endpoints {

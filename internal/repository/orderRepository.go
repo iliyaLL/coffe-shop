@@ -3,9 +3,10 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
-	"frappuccino/internal/models"
 	"log/slog"
 	"time"
+
+	"frappuccino/internal/models"
 
 	"github.com/lib/pq"
 )
