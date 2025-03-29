@@ -20,8 +20,8 @@ CREATE TABLE menu_items (
     id serial primary key,
     name varchar(255) not null unique,
     description varchar(1000) not null,
-    price decimal(10, 2) not null constraint positive_price CHECK (price >= 0),
-    tsv tsvector
+    tsv tsvector,
+    price decimal(10, 2) not null constraint positive_price CHECK (price >= 0)
 );
 CREATE INDEX idx_menu_items_tsv ON menu_items USING GIN(tsv);
 
