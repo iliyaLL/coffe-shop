@@ -3,9 +3,8 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"log/slog"
-
 	"frappuccino/internal/models"
+	"log/slog"
 
 	"github.com/lib/pq"
 )
@@ -201,7 +200,7 @@ func (m *menuRepositoryPostgres) UpdateMenuItem(menuID int, menuItem models.Menu
 		return err
 	}
 
-	rowsAffected, _ := result.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if rowsAffected == 0 {
 		return models.ErrNoRecord
 	}

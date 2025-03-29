@@ -3,9 +3,8 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"log/slog"
-
 	"frappuccino/internal/models"
+	"log/slog"
 
 	"github.com/lib/pq"
 )

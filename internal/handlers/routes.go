@@ -1,10 +1,9 @@
 package handlers
 
 import (
+	"frappuccino/internal/service"
 	"log/slog"
 	"net/http"
-
-	"frappuccino/internal/service"
 )
 
 type application struct {

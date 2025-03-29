@@ -2,11 +2,10 @@ package service
 
 import (
 	"database/sql"
-	"log/slog"
-
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
 	"frappuccino/internal/utils"
+	"log/slog"
 )
 
 type ReportService interface {

@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"net/http"
-
 	"frappuccino/internal/utils"
+	"net/http"
 )
 
 func (app *application) getTotalSalesReport(w http.ResponseWriter, r *http.Request) {

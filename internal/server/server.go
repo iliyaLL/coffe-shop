@@ -2,12 +2,11 @@ package server
 
 import (
 	"database/sql"
+	"frappuccino/internal/handlers"
+	"frappuccino/internal/service"
 	"log/slog"
 	"net/http"
 	"os"
-
-	"frappuccino/internal/handlers"
-	"frappuccino/internal/service"
 )
 
 type server struct {

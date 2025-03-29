@@ -3,11 +3,10 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"math"
+	"frappuccino/internal/models"
 	"net/http"
 	"strconv"
-
-	"frappuccino/internal/models"
+	"math"
 )
 
 // sending responses in the json format
@@ -47,10 +46,10 @@ func MapErrorToResponse(err error, validationMap any) (int, any) {
 
 	// Order errors
 	case errors.Is(err, models.ErrDuplicateOrder),
-		errors.Is(err, models.ErrForeignKeyConstraintOrderMenu),
-		errors.Is(err, models.ErrInvalidFilterOption):
+		errors.Is(err, models.ErrInvalidFilterOption),
+		errors.Is(err, models.ErrForeignKeyConstraintOrderMenu):
 		return http.StatusBadRequest, Response{"error": err.Error()}
-
+	
 	// Report errors
 	case errors.Is(err, models.ErrInvalidPrice):
 		return http.StatusBadRequest, Response{"error": err.Error()}
