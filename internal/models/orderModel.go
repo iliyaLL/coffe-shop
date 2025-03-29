@@ -61,3 +61,35 @@ func (v *orderValidator) Validate() map[string]string {
 	}
 	return nil
 }
+
+type BatchOrderRequest struct {
+	Orders []Order `json:"orders"`
+}
+
+type BatchOrderResponse struct {
+	ProcessedOrders []BatchProcessedOrder `json:"processed_orders"`
+	Summary         BatchOrderSummary     `json:"summary"`
+}
+
+type BatchOrderSummary struct {
+	TotalOrders      int                    `json:"total_orders"`
+	Accepted         int                    `json:"accepted"`
+	Rejected         int                    `json:"rejected"`
+	TotalRevenue     float64                `json:"total_revenue"`
+	InventoryUpdates []BatchInventoryUpdate `json:"inventory_updates"`
+}
+
+type BatchProcessedOrder struct {
+	ID           int     `json:"order_id"`
+	CustomerName string  `json:"customer_name"`
+	Status       string  `json:"status"`
+	Total        float64 `json:"total,omitempty"`
+	Reason       string  `json:"reason,omitempty"`
+}
+
+type BatchInventoryUpdate struct {
+	ID           int    `json:"inventory_id"`
+	Name         string `json:"name"`
+	QuantityUsed int    `json:"quantity_used"`
+	Remaining    int    `json:"remaining"`
+}

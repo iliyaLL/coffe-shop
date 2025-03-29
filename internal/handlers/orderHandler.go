@@ -93,3 +93,22 @@ func (app *application) orderCloseByID(w http.ResponseWriter, r *http.Request) {
 
 	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": fmt.Sprintf("Closed %s", id)})
 }
+
+func (app *application) orderButchCreate(w http.ResponseWriter, r *http.Request) {
+	var batchOrderRequest models.BatchOrderRequest
+	err := json.NewDecoder(r.Body).Decode(&batchOrderRequest)
+	if err != nil {
+		utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "request body does not match json format"})
+		return
+	}
+	defer r.Body.Close()
+
+	batchOrderResponse, err := app.OrderSvc.BatchOrderProcess(batchOrderRequest.Orders)
+	if err != nil {
+		status, body := utils.MapErrorToResponse(err, nil)
+		utils.SendJSONResponse(w, status, body)
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusCreated, batchOrderResponse)
+}
