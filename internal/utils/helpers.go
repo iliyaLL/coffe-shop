@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"frappuccino/internal/models"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -45,13 +47,44 @@ func MapErrorToResponse(err error, validationMap any) (int, any) {
 
 	// Order errors
 	case errors.Is(err, models.ErrDuplicateOrder),
+		errors.Is(err, models.ErrInvalidFilterOption),
 		errors.Is(err, models.ErrForeignKeyConstraintOrderMenu):
+		return http.StatusBadRequest, Response{"error": err.Error()}
+	
+	// Report errors
+	case errors.Is(err, models.ErrInvalidPrice):
 		return http.StatusBadRequest, Response{"error": err.Error()}
 
 	// Default catch-all
 	default:
 		return http.StatusInternalServerError, Response{"error": "Internal Server Error"}
 	}
+}
+
+func ValidatePrices(minPriceStr string, maxPriceStr string) (float64, float64, error) {
+	var minPrice, maxPrice float64
+	var err error
+
+	if minPriceStr == "absent" {
+		minPrice = -1
+	} else {
+		minPrice, err = strconv.ParseFloat(minPriceStr, 64)
+		if err != nil || math.IsNaN(minPrice) || math.IsInf(minPrice, 0) {
+			return 0, 0, models.ErrInvalidPrice
+		}
+	}
+	if maxPriceStr == "absent" {
+		maxPrice = -1
+	} else {
+		maxPrice, err = strconv.ParseFloat(maxPriceStr, 64)
+		if err != nil || math.IsNaN(maxPrice) || math.IsInf(maxPrice, 0) {
+			return 0, 0, models.ErrInvalidPrice
+		}
+	}
+	if minPrice != -1 && maxPrice != -1 && minPrice > maxPrice {
+		return 0, 0, models.ErrInvalidPrice
+	}
+	return minPrice, maxPrice, nil
 }
 
 func ConvertDateFormat(dateStr string) string {

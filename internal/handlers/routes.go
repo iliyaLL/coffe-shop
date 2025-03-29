@@ -67,6 +67,7 @@ func (app *application) Routes() http.Handler {
 		// aggregations endpoints
 		"GET /reports/total-sales":   app.getTotalSalesReport,
 		"GET /reports/popular-items": app.getPopularMenuItems,
+		"GET /reports/search":        app.textSearch,
 	}
 
 	for endpoint, f := range endpoints {
