@@ -20,4 +20,8 @@ var (
 	//Order errors
 	ErrDuplicateOrder                = errors.New("models: duplicate order")
 	ErrForeignKeyConstraintOrderMenu = errors.New("menu item does not exist")
+	ErrInvalidFilterOption           = errors.New("wrong filter option chosen (should be menu/order/all)")
+
+	// Report errors
+	ErrInvalidPrice = errors.New("invalid min/max prices given")
 )

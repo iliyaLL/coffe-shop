@@ -5,6 +5,7 @@ import (
 	"errors"
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
+	"frappuccino/internal/utils"
 	"log/slog"
 	"strconv"
 )
@@ -16,6 +17,7 @@ type OrderService interface {
 	Update(id string, order models.Order) (map[string]string, error)
 	Delete(id string) error
 	Close(id string) error
+	NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error)
 	BatchOrderProcess(orders []models.Order) (models.BatchOrderResponse, error)
 }
 
@@ -86,6 +88,13 @@ func (s *orderService) Close(id string) error {
 	}
 
 	return s.orderRepo.Close(idInt)
+}
+
+func (s *orderService) NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error) {
+	return s.orderRepo.NumberOfOrderedItems(
+		utils.ConvertDateFormat(startDate),
+		utils.ConvertDateFormat(endDate),
+	)
 }
 
 func (s *orderService) BatchOrderProcess(orders []models.Order) (models.BatchOrderResponse, error) {

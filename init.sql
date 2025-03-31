@@ -20,8 +20,10 @@ CREATE TABLE menu_items (
     id serial primary key,
     name varchar(255) not null unique,
     description varchar(1000) not null,
+    tsv tsvector,
     price decimal(10, 2) not null constraint positive_price CHECK (price >= 0)
 );
+CREATE INDEX idx_menu_items_tsv ON menu_items USING GIN(tsv);
 
 CREATE TABLE price_history (
     id serial primary key,
@@ -116,6 +118,20 @@ CREATE TRIGGER after_order_status_update
 AFTER UPDATE ON orders
 FOR EACH ROW
 EXECUTE FUNCTION log_order_status_change();
+
+CREATE OR REPLACE FUNCTION set_menu_items_tsv() 
+RETURNS trigger AS $$
+BEGIN
+  NEW.tsv := setweight(to_tsvector('english', NEW.name), 'A') ||
+             setweight(to_tsvector('english', NEW.description), 'B');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER menu_items_tsv_trigger
+BEFORE INSERT OR UPDATE ON menu_items
+FOR EACH ROW
+EXECUTE FUNCTION set_menu_items_tsv();
 
 INSERT INTO inventory (name, quantity, unit, categories) VALUES
 ('Espresso Shot', 500, 'shots', ARRAY['Beverage']),
