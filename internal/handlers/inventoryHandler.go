@@ -6,6 +6,7 @@ import (
 	"frappuccino/internal/models"
 	"frappuccino/internal/utils"
 	"net/http"
+	"strconv"
 )
 
 func (app *application) inventoryCreate(w http.ResponseWriter, r *http.Request) {
@@ -79,4 +80,22 @@ func (app *application) inventoryDeleteByID(w http.ResponseWriter, r *http.Reque
 	}
 
 	utils.SendJSONResponse(w, http.StatusOK, utils.Response{"message": fmt.Sprintf("Deleted %s", id)})
+}
+
+func (app *application) inventoryGetLeftOvers(w http.ResponseWriter, r *http.Request) {
+	sortBy := r.URL.Query().Get("sortBy")
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
+
+	page, _ := strconv.Atoi(pageStr)
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+
+	result, err := app.InventorySvc.GetLeftOvers(sortBy, page, pageSize)
+	if err != nil {
+		status, body := utils.MapErrorToResponse(err, nil)
+		utils.SendJSONResponse(w, status, body)
+		return
+	}
+
+	utils.SendJSONResponse(w, http.StatusOK, result)
 }
