@@ -7,6 +7,7 @@ CREATE TABLE orders (
     created_at timestamp not null default now(),
     customer_preferences jsonb not null default '{}'::jsonb
 );
+CREATE INDEX idx_orders_customer_name ON orders (customer_name);
 
 CREATE TABLE order_status_history (
     id serial primary key,
