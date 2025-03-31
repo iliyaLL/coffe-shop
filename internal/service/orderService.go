@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"errors"
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
 	"frappuccino/internal/utils"
@@ -17,6 +18,7 @@ type OrderService interface {
 	Delete(id string) error
 	Close(id string) error
 	NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error)
+	BatchOrderProcess(orders []models.Order) (models.BatchOrderResponse, error)
 }
 
 type orderService struct {
@@ -35,7 +37,7 @@ func (s *orderService) Insert(order models.Order) (map[string]string, error) {
 		return errMap, models.ErrMissingFields
 	}
 
-	err := s.orderRepo.Insert(order)
+	_, err := s.orderRepo.Insert(order)
 	return nil, err
 }
 
@@ -93,4 +95,59 @@ func (s *orderService) NumberOfOrderedItems(startDate string, endDate string) (m
 		utils.ConvertDateFormat(startDate),
 		utils.ConvertDateFormat(endDate),
 	)
+}
+
+func (s *orderService) BatchOrderProcess(orders []models.Order) (models.BatchOrderResponse, error) {
+	var batchOrderResponse models.BatchOrderResponse
+	batchOrderResponse.Summary.TotalOrders = len(orders)
+
+	for _, order := range orders {
+		var processedOrder models.BatchProcessedOrder
+		processedOrder.CustomerName = order.CustomerName
+		validator := models.NewOrderValidator(order)
+		if errMap := validator.Validate(); errMap != nil {
+			processedOrder.Status = "rejected"
+			processedOrder.Reason = "missing fields"
+			batchOrderResponse.ProcessedOrders = append(batchOrderResponse.ProcessedOrders, processedOrder)
+			continue
+		}
+
+		orderID, err := s.orderRepo.Insert(order)
+		processedOrder.ID = orderID
+		if err != nil {
+			processedOrder.Status = "rejected"
+			switch {
+			case errors.Is(err, models.ErrForeignKeyConstraintOrderMenu):
+				processedOrder.Reason = "menu item does not exist"
+			case errors.Is(err, models.ErrNegativeQuantity):
+				processedOrder.Reason = "insufficient inventory"
+			default:
+				processedOrder.Reason = "internal server error"
+			}
+			batchOrderResponse.ProcessedOrders = append(batchOrderResponse.ProcessedOrders, processedOrder)
+			continue
+		}
+
+		totalOrderPrice, _ := s.orderRepo.GetBatchTotalOrderPrice(orderID)
+
+		processedOrder.Status = "accepted"
+		processedOrder.Total = totalOrderPrice
+		batchOrderResponse.Summary.Accepted++
+		batchOrderResponse.ProcessedOrders = append(batchOrderResponse.ProcessedOrders, processedOrder)
+	}
+
+	var orderIDs []int
+	for _, order := range batchOrderResponse.ProcessedOrders {
+		if order.Status == "accepted" {
+			orderIDs = append(orderIDs, order.ID)
+			batchOrderResponse.Summary.TotalRevenue += order.Total
+		}
+	}
+	batchOrderResponse.Summary.Rejected = batchOrderResponse.Summary.TotalOrders - batchOrderResponse.Summary.Accepted
+	inventoryUpdates, err := s.orderRepo.GetBatchInventoryUpdates(orderIDs)
+	if err != nil {
+		slog.Error("Failed to get inventory updates", "error", err)
+	}
+	batchOrderResponse.Summary.InventoryUpdates = append(batchOrderResponse.Summary.InventoryUpdates, inventoryUpdates...)
+	return batchOrderResponse, err
 }

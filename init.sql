@@ -156,17 +156,17 @@ INSERT INTO inventory (name, quantity, unit, categories) VALUES
 ('Matcha Powder', 800, 'g', ARRAY['Tea', 'Flavoring']);
 
 
-INSERT INTO menu_items (id, name, description, price) VALUES
-(1, 'Blueberry Muffin', 'Freshly baked muffin with blueberries', 2.00),
-(2, 'Raspberry Muffin', 'Muffin with fresh raspberries', 2.00),
-(3, 'Strawberry Muffin', 'Freshly baked muffin with strawberries', 2.00),
-(4, 'Caffe Latte', 'Espresso with steamed milk', 3.50),
-(5, 'Espresso', 'A strong shot of coffee', 2.00),
-(6, 'Vanilla Cappuccino', 'Espresso with vanilla syrup and foam', 3.80),
-(7, 'Caramel Macchiato', 'Espresso with caramel syrup and steamed milk', 4.20),
-(8, 'Chocolate Frappe', 'Blended chocolate drink with whipped cream', 4.50),
-(9, 'Matcha Latte', 'Green tea with steamed milk', 3.60),
-(10, 'Chai Tea Latte', 'Spiced tea with milk', 3.70);
+INSERT INTO menu_items (name, description, price) VALUES
+('Blueberry Muffin', 'Freshly baked muffin with blueberries', 2.00),
+('Raspberry Muffin', 'Muffin with fresh raspberries', 2.00),
+('Strawberry Muffin', 'Freshly baked muffin with strawberries', 2.00),
+('Caffe Latte', 'Espresso with steamed milk', 3.50),
+('Espresso', 'A strong shot of coffee', 2.00),
+('Vanilla Cappuccino', 'Espresso with vanilla syrup and foam', 3.80),
+('Caramel Macchiato', 'Espresso with caramel syrup and steamed milk', 4.20),
+('Chocolate Frappe', 'Blended chocolate drink with whipped cream', 4.50),
+('Matcha Latte', 'Green tea with steamed milk', 3.60),
+('Chai Tea Latte', 'Spiced tea with milk', 3.70);
 
 
 -- Blueberry Muffin
@@ -232,37 +232,37 @@ INSERT INTO menu_item_inventory (menu_id, inventory_id, quantity) VALUES
 (10, 18, 3);     -- Nutmeg
 
 
-INSERT INTO orders (id, customer_name, order_status) VALUES
-(1, 'Gary Soto', 'closed'),
-(2, 'Shawn Todd II', 'closed'),
-(3, 'Cynthia Miller', 'closed'),
-(4, 'James Johnson', 'open'),
-(5, 'Charles Henry', 'closed'),
-(6, 'Andrea Miller', 'open'),
-(7, 'Patricia Villa', 'closed'),
-(8, 'Jonathan Hernandez', 'closed'),
-(9, 'Mindy Reynolds', 'closed'),
-(10, 'Lori Palmer', 'open'),
-(11, 'Mitchell Mercer', 'closed'),
-(12, 'Dr. Sandra Brown DDS', 'closed'),
-(13, 'Jacqueline Obrien', 'closed'),
-(14, 'Diana Sanders', 'closed'),
-(15, 'Stephen Davis', 'open'),
-(16, 'Carrie Clayton', 'closed'),
-(17, 'Kyle Randall', 'closed'),
-(18, 'Ronald Levine', 'open'),
-(19, 'Rebecca Nixon', 'open'),
-(20, 'Jaime Robinson', 'closed'),
-(21, 'Jessica Bell', 'open'),
-(22, 'David Ramirez', 'closed'),
-(23, 'Karen Brooks', 'closed'),
-(24, 'William Bates', 'open'),
-(25, 'Gerald Benson MD', 'open'),
-(26, 'Christopher Wolfe', 'closed'),
-(27, 'Lisa Reynolds', 'open'),
-(28, 'Michael Sexton', 'closed'),
-(29, 'Edward Horne', 'open'),
-(30, 'Bianca Lopez', 'open');
+INSERT INTO orders (customer_name, order_status) VALUES
+('Gary Soto', 'closed'),
+('Shawn Todd II', 'closed'),
+('Cynthia Miller', 'closed'),
+('James Johnson', 'open'),
+('Charles Henry', 'closed'),
+('Andrea Miller', 'open'),
+('Patricia Villa', 'closed'),
+('Jonathan Hernandez', 'closed'),
+('Mindy Reynolds', 'closed'),
+('Lori Palmer', 'open'),
+('Mitchell Mercer', 'closed'),
+('Dr. Sandra Brown DDS', 'closed'),
+('Jacqueline Obrien', 'closed'),
+('Diana Sanders', 'closed'),
+('Stephen Davis', 'open'),
+('Carrie Clayton', 'closed'),
+('Kyle Randall', 'closed'),
+('Ronald Levine', 'open'),
+('Rebecca Nixon', 'open'),
+('Jaime Robinson', 'closed'),
+('Jessica Bell', 'open'),
+('David Ramirez', 'closed'),
+('Karen Brooks', 'closed'),
+('William Bates', 'open'),
+('Gerald Benson MD', 'open'),
+('Christopher Wolfe', 'closed'),
+('Lisa Reynolds', 'open'),
+('Michael Sexton', 'closed'),
+('Edward Horne', 'open'),
+('Bianca Lopez', 'open');
 
 
 

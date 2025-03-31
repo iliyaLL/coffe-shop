@@ -12,13 +12,15 @@ import (
 )
 
 type OrderRepository interface {
-	Insert(order models.Order) error
+	Insert(order models.Order) (int, error)
 	RetrieveAll() ([]models.Order, error)
 	RetrieveByID(id int) (models.Order, error)
 	Update(orderID int, order models.Order) error
 	Delete(id int) error
 	Close(id int) error
 	NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error)
+	GetBatchTotalOrderPrice(orderID int) (float64, error)
+	GetBatchInventoryUpdates(orderIDs []int) ([]models.BatchInventoryUpdate, error)
 }
 
 type orderRepositoryPostgres struct {
@@ -33,18 +35,18 @@ func NewOrderRepositoryPostgres(db *sql.DB, logger *slog.Logger) *orderRepositor
 	}
 }
 
-func (m *orderRepositoryPostgres) Insert(order models.Order) error {
+func (m *orderRepositoryPostgres) Insert(order models.Order) (int, error) {
 	tx, err := m.pq.Begin()
 	if err != nil {
 		m.logger.Error("Failed to begin transaction", "error", err)
-		return err
+		return 0, err
 	}
 	defer tx.Rollback()
 
 	prefsJSON, err := json.Marshal(order.CustomerPreferences)
 	if err != nil {
 		m.logger.Error("Failed to marshal customer_preferences", "error", err)
-		return err
+		return 0, err
 	}
 
 	var orderID int
@@ -57,12 +59,12 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
 			case "23505":
-				return models.ErrDuplicateOrder
+				return orderID, models.ErrDuplicateOrder
 			case "22P02":
-				return models.ErrInvalidEnumTypeInventory
+				return orderID, models.ErrInvalidEnumTypeInventory
 			}
 		}
-		return err
+		return orderID, err
 	}
 
 	for _, menu := range order.Items {
@@ -73,18 +75,18 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 			if pgErr, ok := err.(*pq.Error); ok {
 				switch pgErr.Code {
 				case "23503":
-					return models.ErrForeignKeyConstraintOrderMenu
+					return orderID, models.ErrForeignKeyConstraintOrderMenu
 				case "23514":
-					return models.ErrNegativeQuantity
+					return orderID, models.ErrNegativeQuantity
 				}
 			}
-			return err
+			return 0, err
 		}
 
 		rows, err := tx.Query("SELECT inventory_id, quantity FROM menu_item_inventory WHERE menu_id=$1", menu.MenuID)
 		if err != nil {
 			m.logger.Error(err.Error())
-			return err
+			return orderID, err
 		}
 		defer rows.Close()
 
@@ -96,7 +98,7 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 		for rows.Next() {
 			var inventoryID, perItemQuantity int
 			if err := rows.Scan(&inventoryID, &perItemQuantity); err != nil {
-				return err
+				return orderID, err
 			}
 			inventoryList = append(inventoryList, invUse{inventoryID, perItemQuantity * menu.Quantity})
 		}
@@ -108,15 +110,15 @@ func (m *orderRepositoryPostgres) Insert(order models.Order) error {
 				if pqErr, ok := err.(*pq.Error); ok {
 					switch pqErr.Code {
 					case "23514":
-						return models.ErrNegativeQuantity
+						return orderID, models.ErrNegativeQuantity
 					}
 				}
-				return err
+				return orderID, err
 			}
 		}
 	}
 
-	return tx.Commit()
+	return orderID, tx.Commit()
 }
 
 func (m *orderRepositoryPostgres) RetrieveAll() ([]models.Order, error) {
@@ -354,11 +356,11 @@ func (m *orderRepositoryPostgres) Close(id int) error {
 
 func (m *orderRepositoryPostgres) NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error) {
 	subquery := "SELECT * FROM orders"
-	if (startDate != "" || endDate != "") {
+	if startDate != "" || endDate != "" {
 		subquery += " WHERE "
-		if (startDate != "") {
+		if startDate != "" {
 			subquery += fmt.Sprintf("created_at::date >= '%v'", startDate)
-			if (endDate != "") {
+			if endDate != "" {
 				subquery += fmt.Sprintf(" AND created_at::date <= '%v'", endDate)
 			}
 		} else {
@@ -388,4 +390,51 @@ func (m *orderRepositoryPostgres) NumberOfOrderedItems(startDate string, endDate
 		mp[name] = quantity
 	}
 	return mp, nil
+}
+
+func (m *orderRepositoryPostgres) GetBatchTotalOrderPrice(orderID int) (float64, error) {
+	query := `
+		SELECT COALESCE(SUM(oi.quantity * mi.price))
+		FROM order_item oi
+		JOIN menu_items mi ON oi.menu_item_id = mi.id
+		WHERE oi.order_id=$1
+	`
+	var totalOrderPrice float64
+	err := m.pq.QueryRow(query, orderID).Scan(&totalOrderPrice)
+	if err != nil {
+		m.logger.Error(err.Error())
+	}
+
+	return totalOrderPrice, err
+}
+
+func (m *orderRepositoryPostgres) GetBatchInventoryUpdates(orderIDs []int) ([]models.BatchInventoryUpdate, error) {
+	query := `
+		SELECT inv.id, inv.name, SUM(mii.quantity * oi.quantity) AS total_used, inv.quantity AS remaining
+		FROM inventory inv
+		JOIN menu_item_inventory mii ON inv.id = mii.inventory_id
+		JOIN order_item oi ON oi.menu_item_id = mii.menu_id
+		JOIN orders o ON o.id = oi.order_id
+		WHERE o.id = ANY($1)
+		GROUP BY inv.id, inv.name, inv.quantity
+	`
+	rows, err := m.pq.Query(query, pq.Array(orderIDs))
+	if err != nil {
+		m.logger.Error("Failed to calculate inventory usage", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var updates []models.BatchInventoryUpdate
+	for rows.Next() {
+		var update models.BatchInventoryUpdate
+		err := rows.Scan(&update.ID, &update.Name, &update.QuantityUsed, &update.Remaining)
+		if err != nil {
+			m.logger.Error("Failed to scan inventory usage row", "error", err)
+			return nil, err
+		}
+		updates = append(updates, update)
+	}
+
+	return updates, nil
 }

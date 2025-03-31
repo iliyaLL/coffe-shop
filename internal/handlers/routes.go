@@ -54,12 +54,13 @@ func (app *application) Routes() http.Handler {
 		"DELETE /menu/{id}": app.menuDelete,
 
 		// orders endpoints
-		"POST /orders":            app.orderCreate,
-		"GET /orders":             app.orderRetrieveAll,
-		"GET /orders/{id}":        app.orderRetrieveByID,
-		"PUT /orders/{id}":        app.orderUpdateByID,
-		"DELETE /orders/{id}":     app.orderDeleteByID,
-		"POST /orders/{id}/close": app.orderCloseByID,
+		"POST /orders":               app.orderCreate,
+		"GET /orders":                app.orderRetrieveAll,
+		"GET /orders/{id}":           app.orderRetrieveByID,
+		"PUT /orders/{id}":           app.orderUpdateByID,
+		"DELETE /orders/{id}":        app.orderDeleteByID,
+		"POST /orders/{id}/close":    app.orderCloseByID,
+		"POST /orders/batch-process": app.orderButchCreate,
 
 		// new endpoints
 		"GET /orders/numberOfOrderedItems": app.numberOfOrderedItems, // ?startDate={startDate}&endDate={endDate}
