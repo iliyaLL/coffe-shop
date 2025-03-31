@@ -36,3 +36,16 @@ func (v *inventoryValidator) Validate() map[string]string {
 	}
 	return nil
 }
+
+type InventoryLeftOverItem struct {
+	Name     string `json:"name"`
+	Quantity int    `json:"quantity"`
+}
+
+type InventoryLeftOversResponse struct {
+	CurrentPage int                     `json:"currentPage"`
+	HasNextPage bool                    `json:"hasNextPage"`
+	PageSize    int                     `json:"pageSize"`
+	TotalPages  int                     `json:"totalPages"`
+	Data        []InventoryLeftOverItem `json:"data"`
+}

@@ -45,6 +45,7 @@ func (app *application) Routes() http.Handler {
 		"GET /inventory/{id}":    app.inventoryRetrieveByID,
 		"PUT /inventory/{id}":    app.inventoryUpdateByID,
 		"DELETE /inventory/{id}": app.inventoryDeleteByID,
+		"GET /getLeftOvers":      app.inventoryGetLeftOvers, //?sortBy=quantity?page=1&pageSize=4
 
 		// menu endpoints
 		"POST /menu":        app.menuCreate,

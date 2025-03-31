@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"frappuccino/internal/models"
 	"log/slog"
 
@@ -15,6 +16,7 @@ type InventoryRepository interface {
 	RetrieveAll() ([]models.Inventory, error)
 	Update(id int, name, unit string, quantity int, categories []string) error
 	Delete(id int) error
+	GetLeftOvers(sortBy string, page, pageSize int) ([]models.InventoryLeftOverItem, int, error)
 }
 
 type inventoryRepositoryPostgres struct {
@@ -146,4 +148,34 @@ func (m *inventoryRepositoryPostgres) Delete(id int) error {
 	}
 
 	return err
+}
+
+func (m *inventoryRepositoryPostgres) GetLeftOvers(sortColumn string, page, pageSize int) ([]models.InventoryLeftOverItem, int, error) {
+	offset := (page - 1) * pageSize
+
+	var totalItems int
+	err := m.pq.QueryRow("SELECT COUNT(*) FROM inventory").Scan(&totalItems)
+	if err != nil {
+		return nil, 0, err
+	}
+	totalPages := (totalItems + pageSize - 1) / pageSize
+
+	query := fmt.Sprintf(`SELECT name, quantity FROM inventory ORDER BY %s DESC LIMIT $1 OFFSET $2`, sortColumn)
+	rows, err := m.pq.Query(query, pageSize, offset)
+	if err != nil {
+		m.logger.Error("failed to execute query", "error", err.Error())
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var leftovers []models.InventoryLeftOverItem
+	for rows.Next() {
+		var inv models.InventoryLeftOverItem
+		if err := rows.Scan(&inv.Name, &inv.Quantity); err != nil {
+			return nil, 0, err
+		}
+		leftovers = append(leftovers, inv)
+	}
+
+	return leftovers, totalPages, nil
 }

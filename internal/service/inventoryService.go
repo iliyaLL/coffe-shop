@@ -14,6 +14,7 @@ type InventoryService interface {
 	RetrieveAll() ([]models.Inventory, error)
 	Update(inventory models.Inventory, id string) (map[string]string, error)
 	Delete(id string) error
+	GetLeftOvers(sortBy string, page, pageSize int) (models.InventoryLeftOversResponse, error)
 }
 
 type inventoryService struct {
@@ -79,4 +80,37 @@ func (s *inventoryService) Delete(id string) error {
 
 	err = s.inventoryRepo.Delete(idInt)
 	return err
+}
+
+func (s *inventoryService) GetLeftOvers(sortBy string, page, pageSize int) (models.InventoryLeftOversResponse, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+	var sortColumn string
+	switch sortBy {
+	case "name":
+		sortColumn = "name"
+	case "quantity", "":
+		sortColumn = "quantity"
+	default:
+		sortColumn = "quantity"
+	}
+
+	data, totalPages, err := s.inventoryRepo.GetLeftOvers(sortColumn, page, pageSize)
+	if err != nil {
+		return models.InventoryLeftOversResponse{}, err
+	}
+
+	hasNext := page < totalPages
+
+	return models.InventoryLeftOversResponse{
+		CurrentPage: page,
+		PageSize:    pageSize,
+		TotalPages:  totalPages,
+		HasNextPage: hasNext,
+		Data:        data,
+	}, nil
 }
