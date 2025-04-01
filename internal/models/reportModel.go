@@ -34,3 +34,10 @@ type ReportSearch struct {
 	OrdersResults []ReportOrderSearchItem `json:"orders,omitempty"`
 	TotalMatches  int                     `json:"total_matches"`
 }
+
+type ReportOrderedItems struct {
+	Period string `json:"period"`
+	Month string `json:"month,omitempty"`
+	Year string `json:"year,omitempty"`
+	OrderedItems []map[string]int `json:"orderedItems"`
+}

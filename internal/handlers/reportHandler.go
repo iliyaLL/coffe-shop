@@ -54,3 +54,27 @@ func (app *application) textSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.SendJSONResponse(w, http.StatusOK, data)
 }
+
+func (app *application) orderedItemsByPeriod(w http.ResponseWriter, r *http.Request) {
+	queryArgs := r.URL.Query()
+	periodArr := queryArgs["period"]
+	if len(periodArr) == 0 {
+		utils.SendJSONResponse(w, http.StatusBadRequest, utils.Response{"error": "period must be specified"})
+		return
+	}
+	monthArr := queryArgs["month"]
+	yearArr := queryArgs["year"]
+	if len(monthArr) == 0 {
+		monthArr = append(monthArr, "")
+	}
+	if len(yearArr) == 0 {
+		yearArr = append(yearArr, "")
+	}
+	data, err := app.ReportSvc.OrderedItemsByPeriod(periodArr[0], monthArr[0], yearArr[0])
+	if err != nil {
+		status, body := utils.MapErrorToResponse(err, nil)
+		utils.SendJSONResponse(w, status, body)
+		return
+	}
+	utils.SendJSONResponse(w, http.StatusOK, data)
+}

@@ -270,7 +270,7 @@ INSERT INTO orders (customer_name, order_status, created_at) VALUES
 ('Charlie Brown', 'closed', '2025-01-04 13:59:00'),
 ('Hannah Taylor', 'open', '2025-01-07 07:15:00'),
 ('Alice Taylor', 'open', '2025-02-01 14:26:00'),
-('Hannah White', 'open', '2025-02-29 08:34:00'),
+('Hannah White', 'open', '2025-02-28 08:34:00'),
 ('Bob Harris', 'open', '2025-01-04 14:13:00'),
 ('Jane Harris', 'open', '2025-01-16 17:39:00'),
 ('George Brown', 'closed', '2025-02-09 14:10:00'),
