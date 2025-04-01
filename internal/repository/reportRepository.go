@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"frappuccino/internal/models"
+	"frappuccino/internal/utils"
 	"log/slog"
+	"strconv"
 
 	"github.com/lib/pq"
 )
@@ -14,6 +16,8 @@ type ReportRepository interface {
 	GetPopularMenuItems() ([]models.ReportPopularItem, error)
 	TextSearchMenu(query string, minPrice float64, maxPrice float64) ([]models.ReportMenuSearchItem, error)
 	TextSearchOrders(query string, minPrice float64, maxPrice float64) ([]models.ReportOrderSearchItem, error)
+	OrderedItemsByDays(month int) ([]map[string]int, error)
+	OrderedItemsByMonths(year int) ([]map[string]int, error)
 }
 
 type reportRepositoryPostgres struct {
@@ -169,6 +173,62 @@ func (m *reportRepositoryPostgres) TextSearchOrders(query string, minPrice float
 			return nil, err
 		}
 		results = append(results, resItem)
+	}
+	return results, nil
+}
+
+func (m *reportRepositoryPostgres) OrderedItemsByDays(month int) ([]map[string]int, error) {
+	rows, err := m.pq.Query(`
+		SELECT EXTRACT(DAY FROM created_at) AS day, COUNT(id) AS num
+		FROM orders
+		WHERE EXTRACT(MONTH FROM created_at)=$1
+		GROUP BY day`, month)
+	if err != nil {
+		m.logger.Error(err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := make([]map[string]int, utils.GetDaysInMonth(month))
+	for i := range results {
+		results[i] = map[string]int{strconv.Itoa(i + 1): 0}
+	}
+	for rows.Next() {
+		var day, cnt int
+		err = rows.Scan(&day, &cnt)
+		if err != nil {
+			m.logger.Error(err.Error())
+			return nil, err
+		}
+		results[day - 1][strconv.Itoa(day)] = cnt
+	}
+	return results, nil
+}
+
+func (m *reportRepositoryPostgres) OrderedItemsByMonths(year int) ([]map[string]int, error) {
+	rows, err := m.pq.Query(`
+		SELECT EXTRACT(MONTH FROM created_at) AS month, COUNT(id) AS num
+		FROM orders
+		WHERE EXTRACT(YEAR FROM created_at)=$1
+		GROUP BY month`, year)
+	if err != nil {
+		m.logger.Error(err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := make([]map[string]int, 12)
+	for i := range results {
+		results[i] = map[string]int{utils.GetMonthName(i + 1): 0}
+	}
+	for rows.Next() {
+		var mon, cnt int
+		err = rows.Scan(&mon, &cnt)
+		if err != nil {
+			m.logger.Error(err.Error())
+			return nil, err
+		}
+		results[mon - 1][utils.GetMonthName(mon)] = cnt
 	}
 	return results, nil
 }

@@ -52,7 +52,9 @@ func MapErrorToResponse(err error, validationMap any) (int, any) {
 		return http.StatusBadRequest, Response{"error": err.Error()}
 	
 	// Report errors
-	case errors.Is(err, models.ErrInvalidPrice):
+	case errors.Is(err, models.ErrInvalidPrice),
+			errors.Is(err, models.ErrInvalidPeriod),
+			errors.Is(err, models.ErrInvalidOrderedItemsFormat):
 		return http.StatusBadRequest, Response{"error": err.Error()}
 
 	// Default catch-all
@@ -97,4 +99,46 @@ func ConvertDateFormat(dateStr string) string {
 		return date.Format("2006-01-02")
 	}
 	return ""
+}
+
+func GetMonthNumber(month string) int {
+	monthNum := map[string]int{
+		"january": 1,
+		"february": 2,
+		"march": 3,
+		"april": 4,
+		"may": 5,
+		"june": 6,
+		"july": 7,
+		"august": 8,
+		"september": 9,
+		"october": 10,
+		"november": 11,
+		"december": 12,
+	}
+	num, ok := monthNum[month]
+	if !ok {
+		return -1
+	}
+	return num
+}
+
+func GetMonthName(month int) string {
+	months := []string{
+		"january", "february", "march", "april",
+		"may", "june", "july", "august",
+		"september", "october", "november", "december",
+	}
+	if month < 1 || month > 12 {
+		return ""
+	}
+	return months[month - 1]
+}
+
+func GetDaysInMonth(month int) int {
+	days := []int{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+	if month < 1 || month > 12 {
+		return -1
+	}
+	return days[month - 1]
 }

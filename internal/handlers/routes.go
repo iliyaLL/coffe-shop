@@ -64,12 +64,13 @@ func (app *application) Routes() http.Handler {
 		"POST /orders/batch-process": app.orderButchCreate,
 
 		// new endpoints
-		"GET /orders/numberOfOrderedItems": app.numberOfOrderedItems, // ?startDate={startDate}&endDate={endDate}
+		"GET /orders/numberOfOrderedItems": app.numberOfOrderedItems,
 
 		// aggregations endpoints
 		"GET /reports/total-sales":   app.getTotalSalesReport,
 		"GET /reports/popular-items": app.getPopularMenuItems,
 		"GET /reports/search":        app.textSearch,
+		"GET /reports/orderedItemsByPeriod": app.orderedItemsByPeriod,
 	}
 
 	for endpoint, f := range endpoints {

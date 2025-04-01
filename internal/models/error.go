@@ -24,4 +24,6 @@ var (
 
 	// Report errors
 	ErrInvalidPrice = errors.New("invalid min/max prices given")
+	ErrInvalidPeriod = errors.New("invalid period type; should be 'day' or 'month'")
+	ErrInvalidOrderedItemsFormat = errors.New("invalid format for ordered items by period: should be day/month or month/year")
 )

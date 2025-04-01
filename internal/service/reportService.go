@@ -6,12 +6,15 @@ import (
 	"frappuccino/internal/repository"
 	"frappuccino/internal/utils"
 	"log/slog"
+	"strconv"
+	"strings"
 )
 
 type ReportService interface {
 	GetTotalSales() (models.ReportTotalSales, error)
 	GetPopularMenuItems() ([]models.ReportPopularItem, error)
 	TextSearch(query string, filter string, minPriceArg string, maxPriceArg string) (models.ReportSearch, error)
+	OrderedItemsByPeriod(period, month, year string) (models.ReportOrderedItems, error)
 }
 
 type reportService struct {
@@ -60,4 +63,47 @@ func (s *reportService) TextSearch(query string, filter string, minPriceArg stri
 		results.TotalMatches += len(results.OrdersResults)
 	}
 	return results, nil
+}
+
+func (s *reportService) OrderedItemsByPeriod(period, month, year string) (models.ReportOrderedItems, error) {
+	period = strings.ToLower(period)
+	month = strings.ToLower(month)
+	year = strings.ToLower(year)
+	if period != "day" && period != "month" {
+		return models.ReportOrderedItems{}, models.ErrInvalidPeriod
+	}
+	if period == "day" {
+		if year != "" {
+			return models.ReportOrderedItems{}, models.ErrInvalidOrderedItemsFormat
+		}
+		monthNum := utils.GetMonthNumber(month)
+		if monthNum == -1 {
+			return models.ReportOrderedItems{}, models.ErrInvalidOrderedItemsFormat
+		}
+		data, err := s.reportRepo.OrderedItemsByDays(monthNum)
+		if err != nil {
+			return models.ReportOrderedItems{}, err
+		}
+		return models.ReportOrderedItems{
+			Period: period,
+			Month: month,
+			OrderedItems: data,
+		}, nil
+	} // period = month
+	if month != "" {
+		return models.ReportOrderedItems{}, models.ErrInvalidOrderedItemsFormat
+	}
+	yearNum, err := strconv.Atoi(year)
+	if err != nil || yearNum <= 0 {
+		return models.ReportOrderedItems{}, models.ErrInvalidOrderedItemsFormat
+	}
+	data, err := s.reportRepo.OrderedItemsByMonths(yearNum)
+	if err != nil {
+		return models.ReportOrderedItems{}, err
+	}
+	return models.ReportOrderedItems{
+		Period: period,
+		Year: year,
+		OrderedItems: data,
+	}, nil
 }
