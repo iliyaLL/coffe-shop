@@ -1,4 +1,4 @@
-package repository
+package postgre
 
 import (
 	"database/sql"
@@ -10,18 +10,6 @@ import (
 
 	"github.com/lib/pq"
 )
-
-type OrderRepository interface {
-	Insert(order models.Order) (int, error)
-	RetrieveAll() ([]models.Order, error)
-	RetrieveByID(id int) (models.Order, error)
-	Update(orderID int, order models.Order) error
-	Delete(id int) error
-	Close(id int) error
-	NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error)
-	GetBatchTotalOrderPrice(orderID int) (float64, error)
-	GetBatchInventoryUpdates(orderIDs []int) ([]models.BatchInventoryUpdate, error)
-}
 
 type orderRepositoryPostgres struct {
 	pq     *sql.DB

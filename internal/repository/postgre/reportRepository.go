@@ -1,4 +1,4 @@
-package repository
+package postgre
 
 import (
 	"database/sql"
@@ -10,15 +10,6 @@ import (
 
 	"github.com/lib/pq"
 )
-
-type ReportRepository interface {
-	GetTotalSales() (models.ReportTotalSales, error)
-	GetPopularMenuItems() ([]models.ReportPopularItem, error)
-	TextSearchMenu(query string, minPrice float64, maxPrice float64) ([]models.ReportMenuSearchItem, error)
-	TextSearchOrders(query string, minPrice float64, maxPrice float64) ([]models.ReportOrderSearchItem, error)
-	OrderedItemsByDays(month int) ([]map[string]int, error)
-	OrderedItemsByMonths(year int) ([]map[string]int, error)
-}
 
 type reportRepositoryPostgres struct {
 	pq     *sql.DB
@@ -200,7 +191,7 @@ func (m *reportRepositoryPostgres) OrderedItemsByDays(month int) ([]map[string]i
 			m.logger.Error(err.Error())
 			return nil, err
 		}
-		results[day - 1][strconv.Itoa(day)] = cnt
+		results[day-1][strconv.Itoa(day)] = cnt
 	}
 	return results, nil
 }
@@ -228,7 +219,7 @@ func (m *reportRepositoryPostgres) OrderedItemsByMonths(year int) ([]map[string]
 			m.logger.Error(err.Error())
 			return nil, err
 		}
-		results[mon - 1][utils.GetMonthName(mon)] = cnt
+		results[mon-1][utils.GetMonthName(mon)] = cnt
 	}
 	return results, nil
 }

@@ -4,17 +4,10 @@ import (
 	"database/sql"
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
+	"frappuccino/internal/repository/postgre"
 	"log/slog"
 	"strconv"
 )
-
-type MenuService interface {
-	InsertMenu(menuItem models.MenuItem) (map[string]string, error)
-	RetrieveAll() ([]models.MenuItem, error)
-	RetrieveByID(id string) (models.MenuItem, error)
-	Update(id string, menuItem models.MenuItem) (map[string]string, error)
-	Delete(id string) error
-}
 
 type menuService struct {
 	menuRepo repository.MenuRepository
@@ -22,7 +15,7 @@ type menuService struct {
 
 func NewMenuService(db *sql.DB, logger *slog.Logger) *menuService {
 	return &menuService{
-		repository.NewMenuRepositoryPostgres(db, logger),
+		postgre.NewMenuRepositoryPostgres(db, logger),
 	}
 }
 

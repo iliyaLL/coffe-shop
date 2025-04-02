@@ -1,4 +1,4 @@
-package repository
+package postgre
 
 import (
 	"database/sql"
@@ -9,15 +9,6 @@ import (
 
 	"github.com/lib/pq"
 )
-
-type InventoryRepository interface {
-	Insert(name, unit string, quantity int, categories []string) error
-	RetrieveByID(id int) (models.Inventory, error)
-	RetrieveAll() ([]models.Inventory, error)
-	Update(id int, name, unit string, quantity int, categories []string) error
-	Delete(id int) error
-	GetLeftOvers(sortBy string, page, pageSize int) ([]models.InventoryLeftOverItem, int, error)
-}
 
 type inventoryRepositoryPostgres struct {
 	pq     *sql.DB

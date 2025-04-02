@@ -5,21 +5,11 @@ import (
 	"errors"
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
+	"frappuccino/internal/repository/postgre"
 	"frappuccino/internal/utils"
 	"log/slog"
 	"strconv"
 )
-
-type OrderService interface {
-	Insert(order models.Order) (map[string]string, error)
-	RetrieveAll() ([]models.Order, error)
-	RetrieveByID(id string) (models.Order, error)
-	Update(id string, order models.Order) (map[string]string, error)
-	Delete(id string) error
-	Close(id string) error
-	NumberOfOrderedItems(startDate string, endDate string) (map[string]int, error)
-	BatchOrderProcess(orders []models.Order) (models.BatchOrderResponse, error)
-}
 
 type orderService struct {
 	orderRepo repository.OrderRepository
@@ -27,7 +17,7 @@ type orderService struct {
 
 func NewOrderService(db *sql.DB, logger *slog.Logger) *orderService {
 	return &orderService{
-		repository.NewOrderRepositoryPostgres(db, logger),
+		postgre.NewOrderRepositoryPostgres(db, logger),
 	}
 }
 

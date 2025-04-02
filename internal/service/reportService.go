@@ -4,25 +4,19 @@ import (
 	"database/sql"
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
+	"frappuccino/internal/repository/postgre"
 	"frappuccino/internal/utils"
 	"log/slog"
 	"strconv"
 	"strings"
 )
 
-type ReportService interface {
-	GetTotalSales() (models.ReportTotalSales, error)
-	GetPopularMenuItems() ([]models.ReportPopularItem, error)
-	TextSearch(query string, filter string, minPriceArg string, maxPriceArg string) (models.ReportSearch, error)
-	OrderedItemsByPeriod(period, month, year string) (models.ReportOrderedItems, error)
-}
-
 type reportService struct {
 	reportRepo repository.ReportRepository
 }
 
 func NewReportService(db *sql.DB, logger *slog.Logger) *reportService {
-	return &reportService{repository.NewReportRepositoryPostgres(db, logger)}
+	return &reportService{postgre.NewReportRepositoryPostgres(db, logger)}
 }
 
 func (s *reportService) GetTotalSales() (models.ReportTotalSales, error) {
@@ -85,8 +79,8 @@ func (s *reportService) OrderedItemsByPeriod(period, month, year string) (models
 			return models.ReportOrderedItems{}, err
 		}
 		return models.ReportOrderedItems{
-			Period: period,
-			Month: month,
+			Period:       period,
+			Month:        month,
 			OrderedItems: data,
 		}, nil
 	} // period = month
@@ -102,8 +96,8 @@ func (s *reportService) OrderedItemsByPeriod(period, month, year string) (models
 		return models.ReportOrderedItems{}, err
 	}
 	return models.ReportOrderedItems{
-		Period: period,
-		Year: year,
+		Period:       period,
+		Year:         year,
 		OrderedItems: data,
 	}, nil
 }

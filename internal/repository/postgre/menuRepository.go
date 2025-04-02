@@ -1,4 +1,4 @@
-package repository
+package postgre
 
 import (
 	"database/sql"
@@ -8,14 +8,6 @@ import (
 
 	"github.com/lib/pq"
 )
-
-type MenuRepository interface {
-	InsertMenuItem(item models.MenuItem) error
-	RetrieveAll() ([]models.MenuItem, error)
-	RetrieveByID(id int) (models.MenuItem, error)
-	UpdateMenuItem(menuID int, menuItem models.MenuItem) error
-	Delete(id int) error
-}
 
 type menuRepositoryPostgres struct {
 	pq     *sql.DB

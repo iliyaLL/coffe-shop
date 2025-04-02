@@ -4,18 +4,10 @@ import (
 	"database/sql"
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
+	"frappuccino/internal/repository/postgre"
 	"log/slog"
 	"strconv"
 )
-
-type InventoryService interface {
-	Insert(inventory models.Inventory) (map[string]string, error)
-	RetrieveByID(id string) (models.Inventory, error)
-	RetrieveAll() ([]models.Inventory, error)
-	Update(inventory models.Inventory, id string) (map[string]string, error)
-	Delete(id string) error
-	GetLeftOvers(sortBy string, page, pageSize int) (models.InventoryLeftOversResponse, error)
-}
 
 type inventoryService struct {
 	inventoryRepo repository.InventoryRepository
@@ -23,7 +15,7 @@ type inventoryService struct {
 
 func NewInventoryService(db *sql.DB, logger *slog.Logger) *inventoryService {
 	return &inventoryService{
-		inventoryRepo: repository.NewInventoryRepositoryWithPostgres(db, logger),
+		inventoryRepo: postgre.NewInventoryRepositoryWithPostgres(db, logger),
 	}
 }
 

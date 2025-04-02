@@ -45,7 +45,7 @@ func (app *application) Routes() http.Handler {
 		"GET /inventory/{id}":    app.inventoryRetrieveByID,
 		"PUT /inventory/{id}":    app.inventoryUpdateByID,
 		"DELETE /inventory/{id}": app.inventoryDeleteByID,
-		"GET /getLeftOvers":      app.inventoryGetLeftOvers, //?sortBy=quantity?page=1&pageSize=4
+		"GET /getLeftOvers":      app.inventoryGetLeftOvers,
 
 		// menu endpoints
 		"POST /menu":        app.menuCreate,
@@ -55,21 +55,19 @@ func (app *application) Routes() http.Handler {
 		"DELETE /menu/{id}": app.menuDelete,
 
 		// orders endpoints
-		"POST /orders":               app.orderCreate,
-		"GET /orders":                app.orderRetrieveAll,
-		"GET /orders/{id}":           app.orderRetrieveByID,
-		"PUT /orders/{id}":           app.orderUpdateByID,
-		"DELETE /orders/{id}":        app.orderDeleteByID,
-		"POST /orders/{id}/close":    app.orderCloseByID,
-		"POST /orders/batch-process": app.orderButchCreate,
-
-		// new endpoints
+		"POST /orders":                     app.orderCreate,
+		"GET /orders":                      app.orderRetrieveAll,
+		"GET /orders/{id}":                 app.orderRetrieveByID,
+		"PUT /orders/{id}":                 app.orderUpdateByID,
+		"DELETE /orders/{id}":              app.orderDeleteByID,
+		"POST /orders/{id}/close":          app.orderCloseByID,
+		"POST /orders/batch-process":       app.orderButchCreate,
 		"GET /orders/numberOfOrderedItems": app.numberOfOrderedItems,
 
 		// aggregations endpoints
-		"GET /reports/total-sales":   app.getTotalSalesReport,
-		"GET /reports/popular-items": app.getPopularMenuItems,
-		"GET /reports/search":        app.textSearch,
+		"GET /reports/total-sales":          app.getTotalSalesReport,
+		"GET /reports/popular-items":        app.getPopularMenuItems,
+		"GET /reports/search":               app.textSearch,
 		"GET /reports/orderedItemsByPeriod": app.orderedItemsByPeriod,
 	}
 
