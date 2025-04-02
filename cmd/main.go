@@ -29,7 +29,7 @@ func main() {
 	db, err := connectDB(connString)
 	for i := range 5 {
 		time.Sleep(5 * time.Second)
-		log.Printf("Retrying to connect to db (%v)", i + 1)
+		log.Printf("Retrying to connect to db (%v)", i+1)
 		db, err = connectDB(connString) // retry connecting to db
 		if err == nil {
 			break
