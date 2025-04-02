@@ -257,8 +257,8 @@ func (m *orderRepositoryPostgres) Update(orderID int, order models.Order) error 
 	result, err := tx.Exec(`
 		UPDATE orders
 		SET customer_name = $1, customer_preferences = $2
-		WHERE id = $3 AND order_status=open
-	`, order.CustomerName, prefsJSON, orderID)
+		WHERE id = $3 AND order_status=$4
+	`, order.CustomerName, prefsJSON, orderID, "open")
 	if err != nil {
 		m.logger.Error(err.Error())
 		if pqErr, ok := err.(*pq.Error); ok {
