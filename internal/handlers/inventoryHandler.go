@@ -3,10 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"frappuccino/internal/models"
-	"frappuccino/internal/utils"
 	"net/http"
 	"strconv"
+
+	"frappuccino/internal/models"
+	"frappuccino/internal/utils"
 )
 
 func (app *application) inventoryCreate(w http.ResponseWriter, r *http.Request) {

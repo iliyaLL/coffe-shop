@@ -3,12 +3,13 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"log/slog"
+	"strconv"
+
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
 	"frappuccino/internal/repository/postgre"
 	"frappuccino/internal/utils"
-	"log/slog"
-	"strconv"
 )
 
 type orderService struct {

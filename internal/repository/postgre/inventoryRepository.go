@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"frappuccino/internal/models"
 	"log/slog"
+
+	"frappuccino/internal/models"
 
 	"github.com/lib/pq"
 )

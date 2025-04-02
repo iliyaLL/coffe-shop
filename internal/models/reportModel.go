@@ -36,8 +36,8 @@ type ReportSearch struct {
 }
 
 type ReportOrderedItems struct {
-	Period string `json:"period"`
-	Month string `json:"month,omitempty"`
-	Year string `json:"year,omitempty"`
+	Period       string           `json:"period"`
+	Month        string           `json:"month,omitempty"`
+	Year         string           `json:"year,omitempty"`
 	OrderedItems []map[string]int `json:"orderedItems"`
 }

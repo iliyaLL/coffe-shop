@@ -3,8 +3,9 @@ package postgre
 import (
 	"database/sql"
 	"errors"
-	"frappuccino/internal/models"
 	"log/slog"
+
+	"frappuccino/internal/models"
 
 	"github.com/lib/pq"
 )

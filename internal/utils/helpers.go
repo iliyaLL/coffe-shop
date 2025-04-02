@@ -3,11 +3,12 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"frappuccino/internal/models"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
+
+	"frappuccino/internal/models"
 )
 
 // sending responses in the json format
@@ -50,11 +51,11 @@ func MapErrorToResponse(err error, validationMap any) (int, any) {
 		errors.Is(err, models.ErrInvalidFilterOption),
 		errors.Is(err, models.ErrForeignKeyConstraintOrderMenu):
 		return http.StatusBadRequest, Response{"error": err.Error()}
-	
+
 	// Report errors
 	case errors.Is(err, models.ErrInvalidPrice),
-			errors.Is(err, models.ErrInvalidPeriod),
-			errors.Is(err, models.ErrInvalidOrderedItemsFormat):
+		errors.Is(err, models.ErrInvalidPeriod),
+		errors.Is(err, models.ErrInvalidOrderedItemsFormat):
 		return http.StatusBadRequest, Response{"error": err.Error()}
 
 	// Default catch-all
@@ -103,18 +104,18 @@ func ConvertDateFormat(dateStr string) string {
 
 func GetMonthNumber(month string) int {
 	monthNum := map[string]int{
-		"january": 1,
-		"february": 2,
-		"march": 3,
-		"april": 4,
-		"may": 5,
-		"june": 6,
-		"july": 7,
-		"august": 8,
+		"january":   1,
+		"february":  2,
+		"march":     3,
+		"april":     4,
+		"may":       5,
+		"june":      6,
+		"july":      7,
+		"august":    8,
 		"september": 9,
-		"october": 10,
-		"november": 11,
-		"december": 12,
+		"october":   10,
+		"november":  11,
+		"december":  12,
 	}
 	num, ok := monthNum[month]
 	if !ok {
@@ -132,7 +133,7 @@ func GetMonthName(month int) string {
 	if month < 1 || month > 12 {
 		return ""
 	}
-	return months[month - 1]
+	return months[month-1]
 }
 
 func GetDaysInMonth(month int) int {
@@ -140,5 +141,5 @@ func GetDaysInMonth(month int) int {
 	if month < 1 || month > 12 {
 		return -1
 	}
-	return days[month - 1]
+	return days[month-1]
 }

@@ -2,11 +2,12 @@ package service
 
 import (
 	"database/sql"
+	"log/slog"
+	"strconv"
+
 	"frappuccino/internal/models"
 	"frappuccino/internal/repository"
 	"frappuccino/internal/repository/postgre"
-	"log/slog"
-	"strconv"
 )
 
 type menuService struct {

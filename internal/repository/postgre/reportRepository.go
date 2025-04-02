@@ -3,10 +3,11 @@ package postgre
 import (
 	"database/sql"
 	"fmt"
-	"frappuccino/internal/models"
-	"frappuccino/internal/utils"
 	"log/slog"
 	"strconv"
+
+	"frappuccino/internal/models"
+	"frappuccino/internal/utils"
 
 	"github.com/lib/pq"
 )

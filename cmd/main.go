@@ -3,9 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+
 	"frappuccino/internal/server"
 	"frappuccino/internal/utils"
-	"log"
 
 	_ "github.com/lib/pq"
 )
