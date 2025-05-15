@@ -1,4 +1,4 @@
-# Frappuccino ☕️
+# coffee-shop ☕️
 
 > A PostgreSQL-powered backend for managing coffee shop operations.
 
